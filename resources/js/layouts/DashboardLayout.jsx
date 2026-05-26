@@ -18,6 +18,7 @@ import {
 export default function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -56,10 +57,26 @@ export default function DashboardLayout({ children }) {
 
   const primaryRole = user?.roles?.[0] || { name: 'User', slug: 'user' };
 
+  const toggleSidebar = () => {
+    if (window.innerWidth <= 768) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setCollapsed(!collapsed);
+    }
+  };
+
   return (
-    <div className="d-flex w-100">
+    <div className="d-flex w-100 min-vh-100">
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar Panel */}
-      <div className={`sidebar-wrapper ${collapsed ? 'collapsed' : ''}`}>
+      <div className={`sidebar-wrapper ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
           <span className="sidebar-icon text-primary"><FiLayers style={{ strokeWidth: 3 }} /></span>
           <span className="sidebar-brand-text fs-5">TILES <span className="text-primary">ERP</span></span>
@@ -76,6 +93,7 @@ export default function DashboardLayout({ children }) {
                 <NavLink 
                   to={item.path} 
                   className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+                  onClick={() => setMobileOpen(false)}
                 >
                   <span className="sidebar-icon">{item.icon}</span>
                   <span className="sidebar-text">{item.label}</span>
@@ -87,12 +105,12 @@ export default function DashboardLayout({ children }) {
       </div>
 
       {/* Main Content Pane */}
-      <div className="d-flex flex-column flex-grow-1 min-vh-100 overflow-hidden bg-light">
+      <div className="d-flex flex-column flex-grow-1 min-vh-100 overflow-hidden bg-light main-content">
         {/* Top Header Bar */}
         <header className="topbar">
           <button 
             className="btn btn-link text-dark p-0" 
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={toggleSidebar}
           >
             <FiMenu className="fs-4" />
           </button>
@@ -117,7 +135,7 @@ export default function DashboardLayout({ children }) {
               <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
                 <li className="px-3 py-2 border-bottom d-sm-none">
                   <div className="fw-semibold text-dark">{user?.name}</div>
-                  <span className={`badge badge-role ${getRoleBadgeClass(primaryRole.slug)}`}>
+                  <span className={`badge-role ${getRoleBadgeClass(primaryRole.slug)}`}>
                     {primaryRole.name}
                   </span>
                 </li>
@@ -135,7 +153,7 @@ export default function DashboardLayout({ children }) {
         </header>
 
         {/* Content Area */}
-        <main className="flex-grow-1 p-4 overflow-auto">
+        <main className="flex-grow-1 p-3 p-md-4 overflow-auto">
           {children}
         </main>
       </div>

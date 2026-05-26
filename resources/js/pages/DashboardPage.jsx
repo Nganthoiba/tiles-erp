@@ -123,6 +123,19 @@ export default function DashboardPage() {
               </button>
             );
           })}
+          <button 
+            onClick={() => {
+              Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                  new Notification("Tiles ERP", { body: "Notifications are enabled!" });
+                }
+              });
+            }}
+            className="btn btn-outline-secondary d-flex align-items-center gap-2 px-4 py-2 rounded-3 border-opacity-25"
+          >
+            <FiActivity />
+            <span>Enable Notifications</span>
+          </button>
         </div>
       </div>
 
