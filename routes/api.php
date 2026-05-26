@@ -2,41 +2,54 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\v1\CategoryController;
+use App\Http\Controllers\Api\v1\ProductController;
+use App\Http\Controllers\Api\v1\InventoryController;
+use App\Http\Controllers\Api\v1\QuotationController;
+use App\Http\Controllers\Api\v1\InvoiceController;
+use App\Http\Controllers\Api\v1\DeliveryController;
+use App\Http\Controllers\Api\v1\PaymentController;
+use App\Http\Controllers\Api\v1\ReportController;
+use App\Http\Controllers\Api\v1\ContactController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());
     });
 
-    // Inventory Routes
-    Route::get('/inventory', [\App\Http\Controllers\Api\InventoryController::class, 'index']);
-    Route::post('/inventory/adjust', [\App\Http\Controllers\Api\InventoryController::class, 'adjust']);
-    Route::post('/inventory/transfer', [\App\Http\Controllers\Api\InventoryController::class, 'transfer']);
+    // Master Data
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('products', ProductController::class);
 
-    // Sales Routes
-    Route::get('/quotations', [\App\Http\Controllers\Api\SalesController::class, 'quotations']);
-    Route::post('/quotations', [\App\Http\Controllers\Api\SalesController::class, 'storeQuotation']);
-    Route::get('/invoices', [\App\Http\Controllers\Api\SalesController::class, 'invoices']);
-    Route::post('/quotations/{id}/convert', [\App\Http\Controllers\Api\SalesController::class, 'convertToInvoice']);
+    // Inventory
+    Route::get('/inventory', [InventoryController::class, 'index']);
+    Route::post('/inventory/adjust', [InventoryController::class, 'adjust']);
+    Route::post('/inventory/transfer', [InventoryController::class, 'transfer']);
 
-    // Contact Routes (Customers & Dealers)
-    Route::get('/customers', [\App\Http\Controllers\Api\ContactController::class, 'customers']);
-    Route::post('/customers', [\App\Http\Controllers\Api\ContactController::class, 'storeCustomer']);
-    Route::get('/customers/{id}', [\App\Http\Controllers\Api\ContactController::class, 'showCustomer']);
-    Route::get('/dealers', [\App\Http\Controllers\Api\ContactController::class, 'dealers']);
-    Route::post('/dealers', [\App\Http\Controllers\Api\ContactController::class, 'storeDealer']);
+    // Sales
+    Route::get('/quotations', [QuotationController::class, 'index']);
+    Route::post('/quotations', [QuotationController::class, 'store']);
+    Route::get('/invoices', [InvoiceController::class, 'index']);
+    Route::post('/quotations/{id}/convert', [InvoiceController::class, 'convertFromQuotation']);
 
-    // Payment Routes
-    Route::get('/payments', [\App\Http\Controllers\Api\PaymentController::class, 'index']);
-    Route::post('/payments', [\App\Http\Controllers\Api\PaymentController::class, 'store']);
+    // Contacts
+    Route::get('/customers', [ContactController::class, 'customers']);
+    Route::post('/customers', [ContactController::class, 'storeCustomer']);
+    Route::get('/customers/{id}', [ContactController::class, 'showCustomer']);
+    Route::get('/dealers', [ContactController::class, 'dealers']);
+    Route::post('/dealers', [ContactController::class, 'storeDealer']);
 
-    // Logistics Routes
-    Route::get('/delivery-slips', [\App\Http\Controllers\Api\LogisticsController::class, 'index']);
-    Route::post('/delivery-slips', [\App\Http\Controllers\Api\LogisticsController::class, 'store']);
-    Route::post('/delivery-slips/{id}/status', [\App\Http\Controllers\Api\LogisticsController::class, 'updateStatus']);
+    // Payments
+    Route::get('/payments', [PaymentController::class, 'index']);
+    Route::post('/payments', [PaymentController::class, 'store']);
 
-    // Report Routes
-    Route::get('/reports/sales-summary', [\App\Http\Controllers\Api\ReportController::class, 'salesSummary']);
-    Route::get('/reports/stock', [\App\Http\Controllers\Api\ReportController::class, 'stockReport']);
-    Route::get('/reports/dues', [\App\Http\Controllers\Api\ReportController::class, 'dueReport']);
+    // Delivery
+    Route::get('/deliveries', [DeliveryController::class, 'index']);
+    Route::post('/deliveries', [DeliveryController::class, 'store']);
+    Route::post('/deliveries/{id}/status', [DeliveryController::class, 'updateStatus']);
+
+    // Reports
+    Route::get('/reports/sales-summary', [ReportController::class, 'salesSummary']);
+    Route::get('/reports/stock', [ReportController::class, 'stockReport']);
+    Route::get('/reports/dues', [ReportController::class, 'dueReport']);
 });

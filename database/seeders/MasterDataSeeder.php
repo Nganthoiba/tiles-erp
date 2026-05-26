@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Modules\Inventory\Models\Category;
-use App\Modules\Inventory\Models\Product;
-use App\Modules\Inventory\Models\Unit;
-use App\Modules\Inventory\Models\UnitConversion;
-use App\Modules\Inventory\Models\Warehouse;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductUnit;
+use App\Models\UnitConversion;
+use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
 
 class MasterDataSeeder extends Seeder
@@ -17,9 +17,9 @@ class MasterDataSeeder extends Seeder
     public function run(): void
     {
         // 1. Units
-        $piece = Unit::create(['name' => 'Piece', 'slug' => 'piece', 'is_base' => true]);
-        $box = Unit::create(['name' => 'Box', 'slug' => 'box', 'is_base' => false]);
-        $sft = Unit::create(['name' => 'Square Feet', 'slug' => 'sft', 'is_base' => false]);
+        $piece = ProductUnit::create(['name' => 'Piece', 'slug' => 'piece', 'is_base' => true]);
+        $box = ProductUnit::create(['name' => 'Box', 'slug' => 'box', 'is_base' => false]);
+        $sft = ProductUnit::create(['name' => 'Square Feet', 'slug' => 'sft', 'is_base' => false]);
 
         // 2. Categories
         $tiles = Category::create(['name' => 'Tiles', 'slug' => 'tiles', 'description' => 'Floor and Wall Tiles']);

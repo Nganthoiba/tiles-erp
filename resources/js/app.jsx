@@ -33,6 +33,7 @@ import DeliveriesPage from './pages/DeliveriesPage';
 import PaymentsPage from './pages/PaymentsPage';
 import ReportsPage from './pages/ReportsPage';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import LandingPage from './pages/LandingPage';
 

@@ -102,6 +102,17 @@ export default function DashboardLayout({ children }) {
             );
           })}
         </ul>
+
+        <div className="sidebar-footer border-top p-3 mt-auto">
+          <button 
+            className="btn btn-link sidebar-link text-danger w-100 d-flex align-items-center gap-2 border-0 p-0 text-decoration-none shadow-none" 
+            onClick={handleLogout}
+            style={{ fontSize: '0.9rem' }}
+          >
+            <FiLogOut />
+            <span className="sidebar-text">Sign Out</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Content Pane */}
