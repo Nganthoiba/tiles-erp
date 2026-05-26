@@ -41,6 +41,6 @@ class InvoiceItem extends Model
 
     public function unit(): BelongsTo
     {
-        return $this->belongsTo(ProductProductUnit::class);
+        return $this->belongsTo(ProductUnit::class);
     }
 }

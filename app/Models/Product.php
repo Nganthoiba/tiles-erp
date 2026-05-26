@@ -30,7 +30,7 @@ class Product extends Model
 
     public function baseUnit(): BelongsTo
     {
-        return $this->belongsTo(ProductProductUnit::class, 'base_unit_id');
+        return $this->belongsTo(ProductUnit::class, 'base_unit_id');
     }
 
     public function unitConversions(): HasMany

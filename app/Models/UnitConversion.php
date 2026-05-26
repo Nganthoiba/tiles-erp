@@ -25,11 +25,11 @@ class UnitConversion extends Model
 
     public function fromUnit(): BelongsTo
     {
-        return $this->belongsTo(ProductProductUnit::class, 'from_unit_id');
+        return $this->belongsTo(ProductUnit::class, 'from_unit_id');
     }
 
     public function toUnit(): BelongsTo
     {
-        return $this->belongsTo(ProductProductUnit::class, 'to_unit_id');
+        return $this->belongsTo(ProductUnit::class, 'to_unit_id');
     }
 }
