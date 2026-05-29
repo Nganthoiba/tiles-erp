@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\v1\DeliveryController;
 use App\Http\Controllers\Api\v1\PaymentController;
 use App\Http\Controllers\Api\v1\ReportController;
 use App\Http\Controllers\Api\v1\ContactController;
+use App\Http\Controllers\Api\v1\UnitController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -20,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Master Data
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('products', ProductController::class);
+    Route::get('/units', [UnitController::class, 'index']);
 
     // Inventory
     Route::get('/inventory', [InventoryController::class, 'index']);

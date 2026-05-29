@@ -1,22 +1,3 @@
-/*
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import HomePage from './HomePage';
-
-function App() {
-    return (
-        <div className="container mt-5">
-            <HomePage />
-        </div>
-    );
-}
-
-ReactDOM.createRoot(document.getElementById('app')).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
-);
-*/
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -26,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import RegisterPage from './pages/RegisterPage';
 import ProductsPage from './pages/ProductsPage';
+import ProductCreate from './pages/ProductCreate';
 import InventoryPage from './pages/InventoryPage';
 import QuotationsPage from './pages/QuotationsPage';
 import InvoicesPage from './pages/InvoicesPage';
@@ -58,6 +40,14 @@ function App() {
             element={
               <ProtectedRoute requiredPermission="manage-products">
                 <ProductsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/products/create"
+            element={
+              <ProtectedRoute requiredPermission="manage-products">
+                <ProductCreate />
               </ProtectedRoute>
             }
           />

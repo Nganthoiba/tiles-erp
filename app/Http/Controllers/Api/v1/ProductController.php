@@ -16,8 +16,15 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        // Validation will be handled by StoreProductRequest in Phase 3 final
-        $product = Product::create($request->all());
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|unique:products,sku',
+            'category_id' => 'required|exists:categories,id',
+            'base_unit_id' => 'required|exists:units,id',
+            'attributes' => 'nullable|array',
+        ]);
+
+        $product = Product::create($validated);
         return response()->json($product, 201);
     }
 

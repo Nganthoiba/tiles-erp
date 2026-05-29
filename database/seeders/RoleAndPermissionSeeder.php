@@ -20,10 +20,10 @@ class RoleAndPermissionSeeder extends Seeder
             'view-dashboard'   => 'Access Dashboard stats and metrics',
             'manage-products'  => 'Create, edit, view, delete products & categories',
             'manage-inventory' => 'Receive, transfer, adjust stock and view stock ledger',
-            'create-quotations'=> 'Create, edit, and print quotations',
+            'create-quotations' => 'Create, edit, and print quotations',
             'create-invoices'  => 'Create, view and print sales invoices',
             'record-payments'  => 'Record and edit invoice collections/payments',
-            'manage-deliveries'=> 'Create and track delivery slips',
+            'manage-deliveries' => 'Create and track delivery slips',
             'view-reports'     => 'Access sales, inventory, and due reports',
             'view-audit-logs'  => 'View activity logs',
             'manage-users'     => 'Administer users, roles, and settings',
@@ -41,6 +41,7 @@ class RoleAndPermissionSeeder extends Seeder
         $roles = [
             'admin'     => 'System Administrator',
             'manager'   => 'Store Manager',
+            'clerk'     => 'Data Entry Clerk',
             'sales'     => 'Sales executive',
             'warehouse' => 'Warehouse operator',
             'accounts'  => 'Accounts officer',
@@ -59,9 +60,16 @@ class RoleAndPermissionSeeder extends Seeder
         // Admin gets everything
         $roleModels['admin']->permissions()->sync(array_values(array_map(fn($m) => $m->id, $permissionModels)));
 
-        // Manager gets everything except manage-users
         $managerPerms = array_filter($permissionModels, fn($slug) => $slug !== 'manage-users', ARRAY_FILTER_USE_KEY);
         $roleModels['manager']->permissions()->sync(array_values(array_map(fn($m) => $m->id, $managerPerms)));
+
+        // Clerk (Data Entry)
+        $clerkPerms = [
+            $permissionModels['view-dashboard']->id,
+            $permissionModels['manage-products']->id,
+            $permissionModels['manage-inventory']->id,
+        ];
+        $roleModels['clerk']->permissions()->sync($clerkPerms);
 
         // Sales
         $salesPerms = [
@@ -109,6 +117,11 @@ class RoleAndPermissionSeeder extends Seeder
                 'name' => 'ERP Store Manager',
                 'email' => 'manager@tileserp.com',
                 'role' => 'manager',
+            ],
+            [
+                'name' => 'ERP Data Entry Clerk',
+                'email' => 'clerk@tileserp.com',
+                'role' => 'clerk',
             ],
             [
                 'name' => 'ERP Sales Representative',
