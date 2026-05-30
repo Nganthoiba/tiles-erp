@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function LoginPage() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -35,7 +37,8 @@ export default function LoginPage() {
       if (err.response?.status === 422) {
         setError(err.response.data?.message || 'Invalid credentials.');
       } else {
-        setError('Login failed.');
+        const msg = err.response ? `Login failed (${err.response.status}): ${err.response.data?.message || err.message}` : `Login failed: ${err.message}`;
+        setError(msg);
       }
     } finally {
       setLoading(false);
@@ -83,9 +86,9 @@ export default function LoginPage() {
                     <label htmlFor="floatingInput" className="text-secondary">Email address</label>
                   </div>
 
-                  <div className="form-floating mb-3">
+                  <div className="form-floating mb-3 position-relative">
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       className="form-control border-light-subtle"
                       id="floatingPassword"
                       placeholder="Password"
@@ -95,6 +98,14 @@ export default function LoginPage() {
                       required
                     />
                     <label htmlFor="floatingPassword" className="text-secondary">Password</label>
+                    <button 
+                      type="button" 
+                      className="btn position-absolute end-0 top-50 translate-middle-y border-0 text-secondary me-2 shadow-none"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ zIndex: 5 }}
+                    >
+                      {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                    </button>
                   </div>
 
                   <div className="d-flex justify-content-between align-items-center mb-4">

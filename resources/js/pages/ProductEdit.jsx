@@ -164,7 +164,7 @@ export default function ProductEdit() {
 
                 {/* Attributes Section */}
                 <div className="col-12 mt-5">
-                  <h6 className="mb-3 text-secondary text-uppercase fw-bold ls-wide" style={{fontSize: '0.75rem'}}>Technical Attributes</h6>
+                  <h6 className="mb-3 text-secondary text-uppercase fw-bold ls-wide" style={{fontSize: '0.75rem'}}>Technical Detail</h6>
                   <hr className="mt-0 mb-4 opacity-10" />
                 </div>
 

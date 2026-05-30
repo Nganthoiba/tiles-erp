@@ -13,7 +13,8 @@ class Vendor extends Model
         'phone',
         'address',
         'landmark',
-        'category',
+        'vendor_group',
+        'vendor_category',
         'is_active',
     ];
 

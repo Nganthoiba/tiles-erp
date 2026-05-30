@@ -33,13 +33,20 @@ class InventoryController extends Controller
         $warehouse = $warehouseId ? Warehouse::find($warehouseId) : null;
 
         $results = $products->map(function ($product) use ($warehouse, $unitId) {
+            try {
+                $stock = $this->stockService->getCurrentStock($product, $warehouse, $unitId);
+            } catch (\Exception $e) {
+                \Log::error("Stock calculation failed for product {$product->sku}: " . $e->getMessage());
+                $stock = 0;
+            }
+
             return [
                 'id' => $product->id,
                 'name' => $product->name,
                 'sku' => $product->sku,
-                'category' => $product->category->name,
-                'stock' => $this->stockService->getCurrentStock($product, $warehouse, $unitId),
-                'unit' => $unitId ? ProductUnit::find($unitId)->name : $product->baseUnit->name,
+                'category' => $product->category->name ?? 'Uncategorized',
+                'stock' => $stock,
+                'unit' => $unitId ? (ProductUnit::find($unitId)->name ?? 'Unknown') : ($product->baseUnit->name ?? 'Unit'),
             ];
         });
 

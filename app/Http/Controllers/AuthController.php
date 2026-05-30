@@ -19,6 +19,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
             'remember' => ['sometimes', 'boolean'],
         ]);
+        \Illuminate\Support\Facades\Log::info('Login attempt', ['email' => $credentials['email']]);
 
         if (!Auth::attempt(
             ['email' => $credentials['email'], 'password' => $credentials['password']],
@@ -28,6 +29,7 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
+        \Illuminate\Support\Facades\Log::info('Login success', ['email' => $credentials['email']]);
 
         $request->session()->regenerate();
 
@@ -62,7 +64,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
         ]);
 
         // Default role is sales

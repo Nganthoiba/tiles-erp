@@ -37,7 +37,8 @@ export default function VendorsPage() {
       setValue('phone', vendor.phone);
       setValue('address', vendor.address);
       setValue('landmark', vendor.landmark);
-      setValue('category', vendor.category);
+      setValue('vendor_group', vendor.vendor_group);
+      setValue('vendor_category', vendor.vendor_category);
     } else {
       reset();
     }
@@ -89,7 +90,7 @@ export default function VendorsPage() {
                 <thead>
                   <tr className="text-secondary">
                     <th className="px-4">Vendor Details</th>
-                    <th>Category</th>
+                    <th>Group / Scale</th>
                     <th>Contact Info</th>
                     <th>State</th>
                     <th className="text-end px-4">Actions</th>
@@ -105,7 +106,8 @@ export default function VendorsPage() {
                         <div className="text-muted smaller">{vendor.landmark ? `${vendor.landmark}, ` : ''}{vendor.address}</div>
                       </td>
                       <td>
-                        <span className="badge bg-light text-dark border px-2 py-1">{vendor.category}</span>
+                        <span className="badge bg-light text-dark border px-2 py-1 me-1">{vendor.vendor_group}</span>
+                        <span className="badge bg-primary-subtle text-primary border-primary-subtle border px-2 py-1" style={{fontSize: '0.65rem'}}>{vendor.vendor_category}</span>
                       </td>
                       <td>
                         <div className="smaller">{vendor.phone}</div>
@@ -157,13 +159,26 @@ export default function VendorsPage() {
                       <input type="email" className="form-control form-control-sm" {...register('email')} />
                     </div>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label smaller fw-bold text-secondary">Category</label>
-                    <select className="form-select form-select-sm" {...register('category', { required: true })}>
-                      <option value="Supplier">Supplier</option>
-                      <option value="Manufacturer">Manufacturer</option>
-                      <option value="Distributor">Distributor</option>
-                    </select>
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label smaller fw-bold text-secondary">Vendor Group</label>
+                      <select className="form-select form-select-sm" {...register('vendor_group', { required: true })}>
+                        <option value="Supplier">Supplier</option>
+                        <option value="Manufacturer">Manufacturer</option>
+                        <option value="Distributor">Distributor</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label smaller fw-bold text-secondary">Vendor Category</label>
+                      <select className="form-select form-select-sm" {...register('vendor_category', { required: true })}>
+                        <option value="Local">Local</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Global">Global</option>
+                        <option value="Small">Small</option>
+                        <option value="Large">Large</option>
+                        <option value="Specialty">Specialty</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="mb-3">
                     <label className="form-label smaller fw-bold text-secondary">Full Address</label>

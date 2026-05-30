@@ -105,7 +105,7 @@ class RoleAndPermissionSeeder extends Seeder
         $roleModels['delivery']->permissions()->sync($deliveryPerms);
 
         // 4. Create Seed Users
-        $defaultPassword = Hash::make('password123');
+        $defaultPassword = 'password123';
 
         $users = [
             [
