@@ -32,4 +32,22 @@ class ProductController extends Controller
     {
         return response()->json(Product::with(['category', 'baseUnit', 'unitConversions.unit'])->findOrFail($id));
     }
+
+    public function update(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|unique:products,sku,' . $id,
+            'category_id' => 'required|exists:categories,id',
+            'base_unit_id' => 'required|exists:units,id',
+            'attributes' => 'nullable|array',
+            'is_active' => 'boolean',
+        ]);
+
+        $product->update($validated);
+
+        return response()->json($product);
+    }
 }

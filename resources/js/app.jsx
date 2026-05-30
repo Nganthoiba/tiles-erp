@@ -8,14 +8,17 @@ import DashboardPage from './pages/DashboardPage';
 import RegisterPage from './pages/RegisterPage';
 import ProductsPage from './pages/ProductsPage';
 import ProductCreate from './pages/ProductCreate';
+import ProductEdit from './pages/ProductEdit';
 import InventoryPage from './pages/InventoryPage';
 import QuotationsPage from './pages/QuotationsPage';
 import InvoicesPage from './pages/InvoicesPage';
 import DeliveriesPage from './pages/DeliveriesPage';
 import PaymentsPage from './pages/PaymentsPage';
 import ReportsPage from './pages/ReportsPage';
+import VendorsPage from './pages/VendorsPage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import '../css/app.css';
 
 import LandingPage from './pages/LandingPage';
 
@@ -48,6 +51,14 @@ function App() {
             element={
               <ProtectedRoute requiredPermission="manage-products">
                 <ProductCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/products/:id/edit"
+            element={
+              <ProtectedRoute requiredPermission="manage-products">
+                <ProductEdit />
               </ProtectedRoute>
             }
           />
@@ -96,6 +107,14 @@ function App() {
             element={
               <ProtectedRoute requiredPermission="view-reports">
                 <ReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vendors"
+            element={
+              <ProtectedRoute requiredPermission="manage-products">
+                <VendorsPage />
               </ProtectedRoute>
             }
           />

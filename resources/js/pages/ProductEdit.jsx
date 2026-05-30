@@ -1,27 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 
-export default function ProductCreate() {
+export default function ProductEdit() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    // Fetch categories and units
-    axios.get('/api/categories').then(res => setCategories(res.data));
-    axios.get('/api/units').then(res => setUnits(res.data));
-  }, []);
+    // Fetch categories, units and product data
+    const fetchData = async () => {
+      try {
+        const [catRes, unitRes, prodRes] = await Promise.all([
+          axios.get('/api/categories'),
+          axios.get('/api/units'),
+          axios.get(`/api/products/${id}`)
+        ]);
+        
+        setCategories(catRes.data);
+        setUnits(unitRes.data);
+        
+        const product = prodRes.data;
+        // Populate form fields
+        setValue('name', product.name);
+        setValue('sku', product.sku);
+        setValue('category_id', product.category_id);
+        setValue('base_unit_id', product.base_unit_id);
+        
+        if (product.attributes) {
+          setValue('size', product.attributes.size || '');
+          setValue('brand', product.attributes.brand || '');
+          setValue('material', product.attributes.material || '');
+          setValue('color', product.attributes.color || '');
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        Swal.fire('Error', 'Could not load product data', 'error');
+        navigate('/products');
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchData();
+  }, [id, setValue, navigate]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // Attributes handling (Size, Brand, Material, Color)
       const payload = {
         ...data,
         attributes: {
@@ -32,34 +65,44 @@ export default function ProductCreate() {
         }
       };
 
-      await axios.post('/api/products', payload);
+      await axios.put(`/api/products/${id}`, payload);
       
       Swal.fire({
         icon: 'success',
-        title: 'Product Created',
-        text: 'The new product has been successfully added to the catalog.',
+        title: 'Product Updated',
+        text: 'The product details have been successfully updated.',
         timer: 2000,
         showConfirmButton: false
       });
 
       navigate('/products');
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('Error updating product:', error);
       Swal.fire({
         icon: 'error',
-        title: 'Oops...',
-        text: 'Something went wrong while creating the product.'
+        title: 'Update Failed',
+        text: error.response?.data?.message || 'Something went wrong while updating the product.'
       });
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetching) {
+    return (
+      <DashboardLayout>
+        <div className="d-flex justify-content-center align-items-center vh-100">
+          <div className="spinner-border text-primary" role="status"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="container py-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h4 className="fw-bold mb-0">New Product Entry</h4>
+          <h4 className="fw-bold mb-0">Edit Product</h4>
           <button onClick={() => navigate('/products')} className="btn btn-outline-secondary btn-sm px-3">
             Back to Catalog
           </button>
@@ -75,7 +118,6 @@ export default function ProductCreate() {
                   <input 
                     type="text" 
                     className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-                    placeholder="e.g. Kajaria Glazed Ceramic Tiles"
                     {...register('name', { required: 'Name is required' })}
                   />
                   {errors.name && <div className="invalid-feedback small">{errors.name.message}</div>}
@@ -86,7 +128,6 @@ export default function ProductCreate() {
                   <input 
                     type="text" 
                     className={`form-control ${errors.sku ? 'is-invalid' : ''}`}
-                    placeholder="e.g. T-KAJ-6060"
                     {...register('sku', { required: 'SKU is required' })}
                   />
                   {errors.sku && <div className="invalid-feedback small">{errors.sku.message}</div>}
@@ -129,7 +170,7 @@ export default function ProductCreate() {
 
                 <div className="col-md-3">
                   <label className="form-label small fw-bold text-secondary">Size</label>
-                  <input type="text" className="form-control" placeholder="60x60 cm" {...register('size')} />
+                  <input type="text" className="form-control" {...register('size')} />
                 </div>
                 <div className="col-md-3">
                   <label className="form-label small fw-bold text-secondary">Brand</label>
@@ -147,7 +188,7 @@ export default function ProductCreate() {
                 {/* Submit */}
                 <div className="col-12 mt-5 pt-3">
                   <button type="submit" className="btn btn-primary px-5 py-2 fw-bold" disabled={loading}>
-                    {loading ? 'Processing...' : 'Register Product'}
+                    {loading ? 'Saving Changes...' : 'Save Changes'}
                   </button>
                 </div>
               </div>

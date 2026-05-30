@@ -21,7 +21,8 @@ class InventoryService
         string $type, // 'addition' or 'subtraction'
         ?string $referenceType = null,
         ?int $referenceId = null,
-        ?string $note = null
+        ?string $note = null,
+        ?int $vendorId = null
     ): StockLedger {
         // Convert to base unit for the ledger
         $convertedQuantity = $this->convertToBase($product, $quantity, $unitId);
@@ -36,6 +37,7 @@ class InventoryService
             'reference_type' => $referenceType,
             'reference_id' => $referenceId,
             'note' => $note,
+            'vendor_id' => $vendorId,
         ]);
     }
 

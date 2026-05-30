@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\UnitConversion;
 use App\Models\Warehouse;
 use App\Models\ProductUnit;
+use App\Models\StockLedger;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +58,7 @@ class InventoryController extends Controller
             'unit_id' => 'required|exists:units,id',
             'type' => 'required|in:addition,subtraction',
             'note' => 'nullable|string|max:255',
+            'vendor_id' => 'nullable|exists:vendors,id',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -68,15 +70,37 @@ class InventoryController extends Controller
             $request->quantity,
             $request->unit_id,
             $request->type,
-            'adjustment',
+            $request->type === 'addition' ? 'purchase' : 'adjustment',
             null,
-            $request->note
+            $request->note,
+            $request->vendor_id
         );
 
         return response()->json([
             'message' => 'Stock adjustment recorded successfully.',
             'data' => $movement
         ]);
+    }
+
+    /**
+     * Get stock movement ledger.
+     */
+    public function ledger(Request $request)
+    {
+        $query = StockLedger::with(['product', 'warehouse', 'unit', 'vendor'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('product_id')) {
+            $query->where('product_id', $request->product_id);
+        }
+
+        if ($request->has('warehouse_id')) {
+            $query->where('warehouse_id', $request->warehouse_id);
+        }
+
+        $ledger = $query->paginate($request->query('per_page', 15));
+
+        return response()->json($ledger);
     }
 
     /**
