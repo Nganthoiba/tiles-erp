@@ -7,10 +7,11 @@ import Swal from 'sweetalert2';
 
 export default function ProductCreate() {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [conversions, setConversions] = useState([]);
 
   useEffect(() => {
     // Fetch categories and units
@@ -29,7 +30,11 @@ export default function ProductCreate() {
           brand: data.brand,
           material: data.material,
           color: data.color
-        }
+        },
+        conversions: conversions.map(c => ({
+          from_unit_id: c.unit_id,
+          factor: c.factor
+        }))
       };
 
       await axios.post('/api/products', payload);
@@ -120,6 +125,15 @@ export default function ProductCreate() {
                   </select>
                   {errors.base_unit_id && <div className="invalid-feedback small">{errors.base_unit_id.message}</div>}
                 </div>
+                <div className="col-12">
+                  <label className="form-label small fw-bold text-secondary">Description (Optional)</label>
+                  <textarea 
+                    className="form-control" 
+                    rows="3" 
+                    placeholder="Enter product details, usage instructions, or search keywords..."
+                    {...register('description')}
+                  ></textarea>
+                </div>
 
                 {/* Attributes Section */}
                 <div className="col-12 mt-5">
@@ -142,6 +156,76 @@ export default function ProductCreate() {
                 <div className="col-md-3">
                   <label className="form-label small fw-bold text-secondary">Color</label>
                   <input type="text" className="form-control" {...register('color')} />
+                </div>
+
+                {/* Conversions Section */}
+                <div className="col-12 mt-5">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0 text-secondary text-uppercase fw-bold ls-wide" style={{fontSize: '0.75rem'}}>Unit Conversions (e.g. Box to Pieces)</h6>
+                    <button 
+                      type="button" 
+                      className="btn btn-outline-primary btn-sm rounded-pill px-3"
+                      onClick={() => setConversions([...conversions, { unit_id: '', factor: '' }])}
+                    >
+                      + Add Alternative Unit
+                    </button>
+                  </div>
+                  <hr className="mt-0 mb-4 opacity-10" />
+                  
+                  {conversions.length === 0 ? (
+                    <div className="p-4 border rounded-3 bg-light text-center">
+                      <span className="text-secondary small">No conversions defined. Standard base unit will be used.</span>
+                    </div>
+                  ) : (
+                    conversions.map((conv, index) => (
+                      <div key={index} className="row g-3 mb-3 align-items-end p-3 border rounded-3 bg-light mx-0">
+                        <div className="col-md-5">
+                          <label className="form-label small fw-bold">1 Unit of...</label>
+                          <select 
+                            className="form-select" 
+                            value={conv.unit_id} 
+                            onChange={(e) => {
+                              const newConvs = [...conversions];
+                              newConvs[index].unit_id = e.target.value;
+                              setConversions(newConvs);
+                            }}
+                            required
+                          >
+                            <option value="">Select Unit</option>
+                            {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                          </select>
+                        </div>
+                        <div className="col-md-5">
+                          <label className="form-label small fw-bold">Contains how many base units?</label>
+                          <div className="input-group">
+                            <input 
+                              type="number" step="0.0001" className="form-control" 
+                              value={conv.factor}
+                              onChange={(e) => {
+                                const newConvs = [...conversions];
+                                newConvs[index].factor = e.target.value;
+                                setConversions(newConvs);
+                              }}
+                              placeholder="e.g. 1.44 or 4"
+                              required
+                            />
+                            <span className="input-group-text small">
+                              {units.find(u => u.id === parseInt(watch('base_unit_id')))?.name || 'Base Unit'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="col-md-2">
+                          <button 
+                            type="button" 
+                            className="btn btn-outline-danger btn-sm w-100 border-0"
+                            onClick={() => setConversions(conversions.filter((_, i) => i !== index))}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 {/* Submit */}

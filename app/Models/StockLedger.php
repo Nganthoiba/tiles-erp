@@ -10,6 +10,8 @@ class StockLedger extends Model
     protected $fillable = [
         'product_id',
         'warehouse_id',
+        'rack_number',
+        'slot_number',
         'quantity',
         'unit_id',
         'converted_quantity',

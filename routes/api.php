@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/inventory/ledger', [InventoryController::class, 'ledger']);
     Route::post('/inventory/adjust', [InventoryController::class, 'adjust']);
     Route::post('/inventory/transfer', [InventoryController::class, 'transfer']);
+    Route::post('/inventory/relocate', [InventoryController::class, 'relocate']);
 
     // Sales
     Route::get('/quotations', [QuotationController::class, 'index']);

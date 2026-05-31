@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }) {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate('/');
     } catch (err) {
       console.error('Logout failed:', err);
     }
@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }) {
     { path: '/dashboard', label: 'Dashboard', icon: <FiHome />, permission: 'view-dashboard' },
     { icon: <FiPackage />, label: 'Products', path: '/products', permission: 'manage-products' },
     { icon: <FiUsers />, label: 'Vendors', path: '/vendors', permission: 'manage-products' },
-    { icon: <FiShoppingCart />, label: 'Inventory', path: '/inventory', permission: 'manage-inventory' },
+    { icon: <FiShoppingCart />, label: 'Inventory', path: '/inventory', permission: 'manage-inventory', end: true },
     { icon: <FiList />, label: 'Stock Ledger', path: '/inventory/ledger', permission: 'manage-inventory' },
     { path: '/quotations', label: 'Quotations', icon: <FiFileText />, permission: 'create-quotations' },
     { path: '/invoices', label: 'Invoices & Sales', icon: <FiClipboard />, permission: 'create-invoices' },
@@ -97,6 +97,7 @@ export default function DashboardLayout({ children }) {
               <li key={item.path} className="sidebar-menu-item">
                 <NavLink 
                   to={item.path} 
+                  end={item.end}
                   className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
                   onClick={() => setMobileOpen(false)}
                 >

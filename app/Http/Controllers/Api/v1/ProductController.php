@@ -43,13 +43,28 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|unique:products,sku',
+            'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'base_unit_id' => 'required|exists:units,id',
             'attributes' => 'nullable|array',
+            'conversions' => 'nullable|array',
+            'conversions.*.from_unit_id' => 'required|exists:units,id',
+            'conversions.*.factor' => 'required|numeric|min:0.0001',
         ]);
 
         $product = Product::create($validated);
-        return response()->json($product, 201);
+
+        if ($request->has('conversions')) {
+            foreach ($request->conversions as $conv) {
+                $product->unitConversions()->create([
+                    'from_unit_id' => $conv['from_unit_id'],
+                    'to_unit_id' => $product->base_unit_id,
+                    'factor' => $conv['factor'],
+                ]);
+            }
+        }
+
+        return response()->json($product->load('unitConversions'), 201);
     }
 
     public function show($id)
@@ -64,14 +79,29 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|unique:products,sku,' . $id,
+            'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'base_unit_id' => 'required|exists:units,id',
             'attributes' => 'nullable|array',
             'is_active' => 'boolean',
+            'conversions' => 'nullable|array',
+            'conversions.*.from_unit_id' => 'required|exists:units,id',
+            'conversions.*.factor' => 'required|numeric|min:0.0001',
         ]);
 
         $product->update($validated);
 
-        return response()->json($product);
+        if ($request->has('conversions')) {
+            $product->unitConversions()->delete();
+            foreach ($request->conversions as $conv) {
+                $product->unitConversions()->create([
+                    'from_unit_id' => $conv['from_unit_id'],
+                    'to_unit_id' => $product->base_unit_id,
+                    'factor' => $conv['factor'],
+                ]);
+            }
+        }
+
+        return response()->json($product->load('unitConversions'));
     }
 }

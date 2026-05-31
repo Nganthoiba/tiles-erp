@@ -22,7 +22,9 @@ class InventoryService
         ?string $referenceType = null,
         ?int $referenceId = null,
         ?string $note = null,
-        ?int $vendorId = null
+        ?int $vendorId = null,
+        ?string $rackNumber = null,
+        ?string $slotNumber = null
     ): StockLedger {
         // Convert to base unit for the ledger
         $convertedQuantity = $this->convertToBase($product, $quantity, $unitId);
@@ -30,6 +32,8 @@ class InventoryService
         return StockLedger::create([
             'product_id' => $product->id,
             'warehouse_id' => $warehouse->id,
+            'rack_number' => $rackNumber,
+            'slot_number' => $slotNumber,
             'quantity' => $quantity,
             'unit_id' => $unitId,
             'converted_quantity' => $convertedQuantity,

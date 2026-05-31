@@ -8,6 +8,7 @@ use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -19,7 +20,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
             'remember' => ['sometimes', 'boolean'],
         ]);
-        \Illuminate\Support\Facades\Log::info('Login attempt', ['email' => $credentials['email']]);
+        Log::info('Login attempt', ['email' => $credentials['email']]);
 
         if (!Auth::attempt(
             ['email' => $credentials['email'], 'password' => $credentials['password']],
@@ -29,7 +30,7 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
-        \Illuminate\Support\Facades\Log::info('Login success', ['email' => $credentials['email']]);
+        Log::info('Login success', ['email' => $credentials['email']]);
 
         $request->session()->regenerate();
 

@@ -126,6 +126,11 @@ export default function ProductsPage() {
                         <div className="text-muted smaller">
                           {product.attributes?.brand} {product.attributes?.size && `| ${product.attributes.size}`}
                         </div>
+                        {product.description && (
+                          <div className="text-muted smaller mt-1 opacity-75" style={{fontSize: '0.7rem', fontStyle: 'italic'}}>
+                            {product.description}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <span className="text-secondary">{product.category?.name}</span>

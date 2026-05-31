@@ -27,7 +27,7 @@ class InventoryController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'baseUnit'])->where('is_active', true);
+        $query = Product::with(['category', 'baseUnit', 'unitConversions.fromUnit'])->where('is_active', true);
 
         if ($request->has('search')) {
             $search = $request->query('search');
@@ -44,11 +44,30 @@ class InventoryController extends Controller
         $warehouse = $warehouseId ? Warehouse::find($warehouseId) : null;
 
         $results = $products->map(function ($product) use ($warehouse, $unitId) {
+            $stock = 0;
+            $locations = [];
+
             try {
                 $stock = $this->stockService->getCurrentStock($product, $warehouse, $unitId);
             } catch (\Exception $e) {
                 Log::error("Stock calculation failed for product {$product->sku}: " . $e->getMessage());
-                $stock = 0;
+            }
+
+            try {
+                // Get locations breakdown (PostgreSQL compatible HAVING clause)
+                $locations = StockLedger::where('product_id', $product->id)
+                    ->when($warehouse, fn($q) => $q->where('warehouse_id', $warehouse->id))
+                    ->select('rack_number', 'slot_number', DB::raw("SUM(CASE WHEN type = 'addition' THEN converted_quantity ELSE -converted_quantity END) as balance"))
+                    ->groupBy('rack_number', 'slot_number')
+                    ->having(DB::raw("SUM(CASE WHEN type = 'addition' THEN converted_quantity ELSE -converted_quantity END)"), '>', 0)
+                    ->get()
+                    ->map(fn($l) => [
+                        'rack' => $l->rack_number ?? 'Unassigned',
+                        'slot' => $l->slot_number ?? 'Unassigned',
+                        'stock' => $unitId ? $this->stockService->convertFromBase($product, (float)$l->balance, $unitId) : (float)$l->balance,
+                    ]);
+            } catch (\Exception $e) {
+                Log::error("Location breakdown failed for product {$product->sku}: " . $e->getMessage());
             }
 
             return [
@@ -58,6 +77,9 @@ class InventoryController extends Controller
                 'category' => $product->category->name ?? 'Uncategorized',
                 'stock' => $stock,
                 'unit' => $unitId ? (ProductUnit::find($unitId)->name ?? 'Unknown') : ($product->baseUnit->name ?? 'Unit'),
+                'base_unit_id' => $product->base_unit_id,
+                'unit_conversions' => $product->unitConversions,
+                'locations' => $locations,
             ];
         });
 
@@ -77,6 +99,8 @@ class InventoryController extends Controller
             'type' => 'required|in:addition,subtraction',
             'note' => 'nullable|string|max:255',
             'vendor_id' => 'nullable|exists:vendors,id',
+            'rack_number' => 'nullable|string|max:50',
+            'slot_number' => 'nullable|string|max:50',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -91,7 +115,9 @@ class InventoryController extends Controller
             $request->type === 'addition' ? 'purchase' : 'adjustment',
             null,
             $request->note,
-            $request->vendor_id
+            $request->vendor_id,
+            $request->rack_number,
+            $request->slot_number
         );
 
         return response()->json([
@@ -190,5 +216,67 @@ class InventoryController extends Controller
         return response()->json([
             'message' => 'Stock transfer completed successfully.'
         ]);
+    }
+
+    /**
+     * Relocate stock between racks/slots in the same warehouse
+     */
+    public function relocate(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'quantity' => 'required|numeric|min:0.0001',
+            'from_rack' => 'nullable|string',
+            'from_slot' => 'nullable|string',
+            'to_rack' => 'nullable|string',
+            'to_slot' => 'nullable|string',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        $product = Product::findOrFail($request->product_id);
+        $warehouse = Warehouse::findOrFail($request->warehouse_id);
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Subtract from source
+            $this->stockService->recordMovement(
+                $product,
+                $warehouse,
+                $request->quantity,
+                $product->base_unit_id,
+                'subtraction',
+                'relocation',
+                null,
+                "Relocated to: Rack " . ($request->to_rack ?? 'Any') . ", Slot " . ($request->to_slot ?? 'Any') . ". " . $request->note,
+                null,
+                $request->from_rack,
+                $request->from_slot
+            );
+
+            // 2. Add to target
+            $this->stockService->recordMovement(
+                $product,
+                $warehouse,
+                $request->quantity,
+                $product->base_unit_id,
+                'addition',
+                'relocation',
+                null,
+                "Relocated from: Rack " . ($request->from_rack ?? 'Any') . ", Slot " . ($request->from_slot ?? 'Any') . ". " . $request->note,
+                null,
+                $request->to_rack,
+                $request->to_slot
+            );
+
+            DB::commit();
+
+            return response()->json(['message' => 'Stock relocated successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Stock relocation failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Relocation failed: ' . $e->getMessage()], 500);
+        }
     }
 }

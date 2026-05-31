@@ -20,6 +20,8 @@ export default function InventoryPage() {
   const [ledgerSearch, setLedgerSearch] = useState('');
   const [debouncedStockSearch, setDebouncedStockSearch] = useState('');
   const [debouncedLedgerSearch, setDebouncedLedgerSearch] = useState('');
+  const [showRelocateModal, setShowRelocateModal] = useState(false);
+  const [selectedItemForRelocate, setSelectedItemForRelocate] = useState(null);
   
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedStockSearch(stockSearch), 500);
@@ -34,7 +36,18 @@ export default function InventoryPage() {
     console.log('showModal changed:', showModal);
   }, [showModal]);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm();
+  
+  const watchProductId = watch('product_id');
+
+  useEffect(() => {
+    if (watchProductId) {
+      const selectedProduct = products.find(p => p.id === parseInt(watchProductId));
+      if (selectedProduct && selectedProduct.base_unit_id) {
+        setValue('unit_id', String(selectedProduct.base_unit_id));
+      }
+    }
+  }, [watchProductId, products, setValue]);
 
   useEffect(() => {
     fetchInitialData();
@@ -116,6 +129,32 @@ export default function InventoryPage() {
       });
     }
   };
+  const handleRelocateStock = async (data) => {
+    try {
+      await axios.post('/api/inventory/relocate', {
+        ...data,
+        product_id: selectedItemForRelocate.id,
+        warehouse_id: warehouses[0]?.id // Assuming first warehouse for simplicity as per current design
+      });
+      Swal.fire({
+        icon: 'success',
+        title: 'Relocated!',
+        text: 'Stock has been moved successfully.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      setShowRelocateModal(false);
+      reset();
+      fetchStockLevels();
+    } catch (error) {
+      console.error('Error relocating stock:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: error.response?.data?.message || 'Could not relocate stock.'
+      });
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -179,7 +218,14 @@ export default function InventoryPage() {
                         <tr key={item.id}>
                           <td className="px-4">
                             <div className="fw-semibold text-dark">{item.name}</div>
-                            <div className="text-muted" style={{fontSize: '0.75rem'}}>{item.sku}</div>
+                            <div className="text-muted d-flex align-items-center gap-2" style={{fontSize: '0.75rem'}}>
+                              <code>{item.sku}</code>
+                              {item.locations?.length > 0 && (
+                                <span className="text-dark opacity-75">
+                                  • {item.locations.map(loc => `${loc.rack}/${loc.slot}`).join(', ')}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td>
                             <span className="text-secondary">
@@ -191,15 +237,22 @@ export default function InventoryPage() {
                               {item.stock} {item.unit}
                             </span>
                           </td>
-                          <td className="px-4 text-end">
-                            <Link 
-                              to={`/inventory/ledger?search=${encodeURIComponent(item.sku)}`} 
-                              className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold" 
-                              style={{fontSize: '0.75rem'}}
-                            >
-                              View Ledger
-                            </Link>
-                          </td>
+                            <div className="d-flex align-items-center justify-content-end gap-3">
+                              <button 
+                                onClick={() => { setSelectedItemForRelocate(item); setShowRelocateModal(true); }}
+                                className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-primary" 
+                                style={{fontSize: '0.75rem'}}
+                              >
+                                Relocate
+                              </button>
+                              <Link 
+                                to={`/inventory/ledger?search=${encodeURIComponent(item.sku)}`} 
+                                className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold" 
+                                style={{fontSize: '0.75rem'}}
+                              >
+                                View Ledger
+                              </Link>
+                            </div>
                         </tr>
                       ))}
                     </tbody>
@@ -249,37 +302,54 @@ export default function InventoryPage() {
                     </select>
                   </div>
                   
-                  <div className="row g-3 mb-3">
-                    <div className="col-md-6">
-                      <label className="form-label small fw-bold text-secondary">Warehouse</label>
-                      <select 
-                        className={`form-select ${errors.warehouse_id ? 'is-invalid' : ''}`}
-                        {...register('warehouse_id', { required: true })}
-                      >
-                        <option value="">Select Warehouse</option>
-                        {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                      </select>
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label small fw-bold text-secondary">Unit</label>
-                      <select 
-                        className={`form-select ${errors.unit_id ? 'is-invalid' : ''}`}
-                        {...register('unit_id', { required: true })}
-                      >
-                        <option value="">Select Unit</option>
-                        {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                      </select>
-                    </div>
+                  <div className="mb-3">
+                    <label className="form-label small fw-bold text-secondary">Warehouse</label>
+                    <select 
+                      className={`form-select ${errors.warehouse_id ? 'is-invalid' : ''}`}
+                      {...register('warehouse_id', { required: true })}
+                    >
+                      <option value="">Select Warehouse</option>
+                      {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                    </select>
                   </div>
 
                   <div className="row g-3 mb-3">
                     <div className="col-md-6">
-                      <label className="form-label small fw-bold text-secondary">Quantity</label>
+                      <label className="form-label small fw-bold text-secondary">Rack Number (Optional)</label>
                       <input 
-                        type="number" step="0.0001"
-                        className={`form-control ${errors.quantity ? 'is-invalid' : ''}`}
-                        {...register('quantity', { required: true, min: 0.0001 })}
+                        type="text" 
+                        className="form-control" 
+                        placeholder="e.g. R-01" 
+                        {...register('rack_number')} 
                       />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Slot Number (Optional)</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="e.g. S-05" 
+                        {...register('slot_number')} 
+                      />
+                    </div>
+
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Quantity</label>
+                      <div className="input-group">
+                        <input 
+                          type="number" step="0.0001"
+                          className={`form-control ${errors.quantity ? 'is-invalid' : ''}`}
+                          {...register('quantity', { required: true, min: 1 })}
+                          placeholder="0"
+                        />
+                        <span className="input-group-text bg-light text-secondary small fw-semibold">
+                          {(() => {
+                            const prod = products.find(p => p.id === parseInt(watchProductId));
+                            if (!prod) return 'Unit';
+                            return units.find(u => u.id === prod.base_unit_id)?.name || 'Unit';
+                          })()}
+                        </span>
+                      </div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label small fw-bold text-secondary">Adjustment Type</label>
@@ -341,6 +411,7 @@ export default function InventoryPage() {
                         <th>Item</th>
                         <th>Type</th>
                         <th className="text-end">Qty</th>
+                        <th>Rack/Slot</th>
                         <th className="px-4">Warehouse</th>
                       </tr>
                     </thead>
@@ -358,6 +429,9 @@ export default function InventoryPage() {
                           </td>
                           <td className={`text-end fw-bold ${entry.type === 'addition' ? 'text-success' : 'text-danger'}`}>
                             {entry.type === 'addition' ? '+' : '-'}{parseInt(entry.quantity)}
+                          </td>
+                          <td className="text-secondary small">
+                            {entry.rack_number || '-'}/{entry.slot_number || '-'}
                           </td>
                           <td className="px-4 text-secondary">{entry.warehouse?.name}</td>
                         </tr>
@@ -380,6 +454,71 @@ export default function InventoryPage() {
         </div>
       )}
 
+      {/* Relocate Stock Modal */}
+      {showRelocateModal && selectedItemForRelocate && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999}}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 rounded-3 shadow-lg">
+              <div className="modal-header border-bottom bg-light px-4 py-3">
+                <div className="d-flex align-items-center gap-2">
+                  <FiRefreshCw className="text-primary" />
+                  <h6 className="modal-title fw-bold m-0">Relocate Stock: {selectedItemForRelocate.name}</h6>
+                </div>
+                <button type="button" className="btn-close shadow-none" onClick={() => setShowRelocateModal(false)}></button>
+              </div>
+              <div className="modal-body p-4">
+                <form onSubmit={handleSubmit(handleRelocateStock)}>
+                  <div className="bg-light p-3 rounded-2 mb-4">
+                    <p className="small fw-bold text-secondary text-uppercase mb-2">Available in Locations:</p>
+                    {selectedItemForRelocate.locations?.map((loc, idx) => (
+                      <div key={idx} className="small d-flex justify-content-between mb-1">
+                        <span>Rack: {loc.rack}, Slot: {loc.slot}</span>
+                        <span className="fw-bold">{loc.stock} {selectedItemForRelocate.unit}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Source Rack</label>
+                      <input type="text" className="form-control" placeholder="Rack" {...register('from_rack')} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Source Slot</label>
+                      <input type="text" className="form-control" placeholder="Slot" {...register('from_slot')} />
+                    </div>
+                    
+                    <div className="col-12 py-1 text-center">
+                      <div className="badge bg-primary rounded-pill"><FiArrowDown /> Move To <FiArrowDown /></div>
+                    </div>
+
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Target Rack</label>
+                      <input type="text" className="form-control" placeholder="Rack" {...register('to_rack', { required: true })} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Target Slot</label>
+                      <input type="text" className="form-control" placeholder="Slot" {...register('to_slot')} />
+                    </div>
+
+                    <div className="col-12">
+                      <label className="form-label small fw-bold text-secondary">Quantity to Relocate</label>
+                      <div className="input-group">
+                        <input type="number" step="0.0001" className="form-control" {...register('quantity', { required: true, min: 0.0001 })} />
+                        <span className="input-group-text bg-light small fw-semibold">{selectedItemForRelocate.unit}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="d-grid mt-4">
+                    <button type="submit" className="btn btn-primary py-2 fw-bold rounded-pill">Confirm Relocation</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <style>{`
         .premium-card {
           transition: all 0.3s ease;
