@@ -24,15 +24,17 @@ export default function ProductEdit() {
           axios.get(`/api/products/${id}`)
         ]);
         
-        setCategories(catRes.data);
-        setUnits(unitRes.data);
+        setCategories(Array.isArray(catRes.data) ? catRes.data : (catRes.data?.data || []));
+        setUnits(Array.isArray(unitRes.data) ? unitRes.data : (unitRes.data?.data || []));
         
-        const product = prodRes.data;
+        const product = prodRes.data?.data || prodRes.data;
+        if (!product) throw new Error('Product not found');
+
         // Populate form fields
-        setValue('name', product.name);
-        setValue('sku', product.sku);
-        setValue('category_id', product.category_id);
-        setValue('base_unit_id', product.base_unit_id);
+        setValue('name', product.name || '');
+        setValue('sku', product.sku || '');
+        setValue('category_id', product.category_id || '');
+        setValue('base_unit_id', product.base_unit_id || '');
         
         if (product.attributes) {
           setValue('size', product.attributes.size || '');

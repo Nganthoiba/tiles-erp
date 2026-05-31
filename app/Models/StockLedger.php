@@ -16,7 +16,8 @@ class StockLedger extends Model
         'type',
         'reference_type',
         'reference_id',
-        'note'
+        'note',
+        'vendor_id'
     ];
 
     protected $casts = [
@@ -37,5 +38,10 @@ class StockLedger extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(ProductUnit::class);
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
     }
 }

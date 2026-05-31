@@ -9,8 +9,6 @@ import Swal from 'sweetalert2';
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showStockModal, setShowStockModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [warehouses, setWarehouses] = useState([]);
   const [vendors, setVendors] = useState([]);
   
@@ -18,14 +16,28 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-    fetchWarehouses();
-    fetchVendors();
   }, []);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [debouncedSearch]);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/products');
+      const response = await axios.get('/api/products', {
+        params: { search: debouncedSearch }
+      });
       // The API returns a paginated response or a simple array
       const data = response.data.data || response.data;
       setProducts(Array.isArray(data) ? data : []);
@@ -56,33 +68,9 @@ export default function ProductsPage() {
     }
   };
 
-  const openStockModal = (product) => {
-    setSelectedProduct(product);
-    setShowStockModal(true);
-  };
+  // Removed openStockModal
 
-  const handleQuickStockAdd = async (data) => {
-    try {
-      await axios.post('/api/inventory/adjust', {
-        ...data,
-        product_id: selectedProduct.id,
-        unit_id: selectedProduct.base_unit_id,
-        type: 'addition'
-      });
-      Swal.fire({
-        icon: 'success',
-        title: 'Stock Updated',
-        text: `${data.quantity} units added to ${selectedProduct.name}`,
-        timer: 1500,
-        showConfirmButton: false
-      });
-      setShowStockModal(false);
-      reset();
-      fetchProducts(); // Refresh list
-    } catch (error) {
-      Swal.fire('Error', error.response?.data?.message || 'Failed to update stock', 'error');
-    }
-  };
+  // Removed handleQuickStockAdd
 
   return (
     <DashboardLayout>
@@ -90,11 +78,23 @@ export default function ProductsPage() {
         <div className="d-flex justify-content-between align-items-end mb-4">
           <div>
             <h4 className="fw-bold mb-0 text-dark">Products Hub <span className="badge bg-light text-muted fw-normal" style={{fontSize: '0.6rem'}}>v2.1</span></h4>
-            <p className="text-secondary small mb-0">Centralized catalog & rapid inventory actions</p>
+            <p className="text-secondary small mb-0">Centralized catalog & management</p>
           </div>
-          <Link to="/products/create" className="btn btn-primary d-flex align-items-center gap-2 px-3 btn-sm fw-semibold">
-            <FiPlus /> New Product
-          </Link>
+          <div className="d-flex gap-3 align-items-center">
+            <div className="input-group input-group-sm" style={{width: '250px'}}>
+              <span className="input-group-text bg-white border-end-0 text-secondary"><FiBox style={{fontSize: '0.8rem'}} /></span>
+              <input 
+                type="text" 
+                className="form-control border-start-0 ps-0 shadow-none" 
+                placeholder="Search by name or SKU..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Link to="/products/create" className="btn btn-primary d-flex align-items-center gap-2 px-3 btn-sm fw-semibold">
+              <FiPlus /> New Product
+            </Link>
+          </div>
         </div>
 
         <div className="card premium-card border-0 rounded-3 shadow-sm">
@@ -132,12 +132,7 @@ export default function ProductsPage() {
                       </td>
                       <td>{product.base_unit?.name}</td>
                       <td className="text-end px-4">
-                        <button 
-                          className="btn btn-link btn-sm text-decoration-none text-success fw-bold me-2"
-                          onClick={() => openStockModal(product)}
-                        >
-                          <FiPlus className="me-1" /> Add Stock
-                        </button>
+                        {/* Removed Add Stock button */}
                         <Link 
                           to={`/products/${product.id}/edit`}
                           className="btn btn-link btn-sm text-decoration-none text-secondary"
@@ -154,49 +149,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Quick Add Stock Modal */}
-      {showStockModal && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999}}>
-          <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content border-0 rounded-3 shadow-lg">
-              <div className="modal-header border-bottom bg-light px-3 py-2">
-                <h6 className="modal-title fw-bold m-0 small">Receive Stock</h6>
-                <button type="button" className="btn-close shadow-none" style={{fontSize: '0.7rem'}} onClick={() => setShowStockModal(false)}></button>
-              </div>
-              <div className="modal-body p-3">
-                <p className="small mb-3">Adding stock for: <br/><strong className="text-primary">{selectedProduct?.name}</strong></p>
-                <form onSubmit={handleSubmit(handleQuickStockAdd)}>
-                  <div className="mb-3">
-                    <label className="form-label smaller fw-bold text-secondary">Warehouse</label>
-                    <select className="form-select form-select-sm" {...register('warehouse_id', { required: true })}>
-                      <option value="">Select Location</option>
-                      {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label smaller fw-bold text-secondary">Quantity ({selectedProduct?.base_unit?.name})</label>
-                    <input type="number" step="0.01" className="form-control form-control-sm" {...register('quantity', { required: true, min: 0.001 })} placeholder="e.g. 2500" />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label smaller fw-bold text-secondary">Supplier / Vendor</label>
-                    <select className="form-select form-select-sm" {...register('vendor_id')}>
-                      <option value="">Select Vendor</option>
-                      {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="mb-4">
-                    <label className="form-label smaller fw-bold text-secondary">Reference / Note</label>
-                    <input type="text" className="form-control form-control-sm" {...register('note')} placeholder="Batch # or PO #" />
-                  </div>
-                  <button type="submit" className="btn btn-primary w-100 btn-sm py-2 fw-bold rounded-pill d-flex align-items-center justify-content-center gap-2">
-                    <FiCheck /> Confirm Arrival
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Quick Add Stock Modal Removed */}
     </DashboardLayout>
   );
 }

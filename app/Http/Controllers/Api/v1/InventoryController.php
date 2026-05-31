@@ -11,6 +11,7 @@ use App\Models\StockLedger;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InventoryController extends Controller
 {
@@ -26,7 +27,17 @@ class InventoryController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::with(['category', 'baseUnit'])->where('is_active', true)->get();
+        $query = Product::with(['category', 'baseUnit'])->where('is_active', true);
+
+        if ($request->has('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->get();
         $warehouseId = $request->query('warehouse_id');
         $unitId = $request->query('unit_id');
 
@@ -36,7 +47,7 @@ class InventoryController extends Controller
             try {
                 $stock = $this->stockService->getCurrentStock($product, $warehouse, $unitId);
             } catch (\Exception $e) {
-                \Log::error("Stock calculation failed for product {$product->sku}: " . $e->getMessage());
+                Log::error("Stock calculation failed for product {$product->sku}: " . $e->getMessage());
                 $stock = 0;
             }
 
@@ -103,6 +114,16 @@ class InventoryController extends Controller
 
         if ($request->has('warehouse_id')) {
             $query->where('warehouse_id', $request->warehouse_id);
+        }
+
+        if ($request->has('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('product', function ($pq) use ($search) {
+                    $pq->where('name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                })->orWhere('note', 'like', "%{$search}%");
+            });
         }
 
         $ledger = $query->paginate($request->query('per_page', 15));

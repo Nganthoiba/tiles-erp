@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -14,6 +15,20 @@ export default function InventoryPage() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [stockSearch, setStockSearch] = useState('');
+  const [ledgerSearch, setLedgerSearch] = useState('');
+  const [debouncedStockSearch, setDebouncedStockSearch] = useState('');
+  const [debouncedLedgerSearch, setDebouncedLedgerSearch] = useState('');
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedStockSearch(stockSearch), 500);
+    return () => clearTimeout(timer);
+  }, [stockSearch]);
+
+  useEffect(() => {
+    fetchStockLevels();
+  }, [debouncedStockSearch]);
 
   useEffect(() => {
     console.log('showModal changed:', showModal);
@@ -26,23 +41,45 @@ export default function InventoryPage() {
     fetchVendors();
   }, []);
 
+  const fetchStockLevels = async () => {
+    try {
+      const response = await axios.get('/api/inventory', {
+        params: { search: debouncedStockSearch }
+      });
+      setStockLevels(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchLedger = async () => {
+    try {
+      const response = await axios.get('/api/inventory/ledger', {
+        params: { per_page: 5 }
+      });
+      setLedger(response.data?.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const fetchInitialData = async () => {
     setLoading(true);
     try {
       const [stockRes, ledgerRes, prodRes, whRes, unitRes] = await Promise.all([
-        axios.get('/api/inventory'),
-        axios.get('/api/inventory/ledger'),
+        axios.get('/api/inventory', { params: { search: debouncedStockSearch } }),
+        axios.get('/api/inventory/ledger', { params: { per_page: 5 } }),
         axios.get('/api/products'),
         axios.get('/api/warehouses'),
         axios.get('/api/units')
       ]);
-      setStockLevels(stockRes.data || []);
-      setLedger(ledgerRes.data?.data || []);
-      setProducts(prodRes.data || []);
-      setWarehouses(whRes.data || []);
-      setUnits(unitRes.data || []);
+      setStockLevels(Array.isArray(stockRes.data) ? stockRes.data : []);
+      setLedger(ledgerRes.data?.data || (Array.isArray(ledgerRes.data) ? ledgerRes.data : []));
+      setProducts(prodRes.data?.data || (Array.isArray(prodRes.data) ? prodRes.data : []));
+      setWarehouses(Array.isArray(whRes.data) ? whRes.data : []);
+      setUnits(Array.isArray(unitRes.data) ? unitRes.data : []);
     } catch (error) {
       console.error('Error fetching inventory data:', error);
+      Swal.fire('Error', 'Failed to load inventory data. Please check console.', 'error');
     } finally {
       setLoading(false);
     }
@@ -88,12 +125,20 @@ export default function InventoryPage() {
             <h4 className="fw-bold mb-0">Inventory Control</h4>
             <p className="text-secondary small mb-0">Real-time stock monitoring & manual movements</p>
           </div>
-          <button 
-            className="btn btn-primary d-flex align-items-center gap-2 px-3 btn-sm fw-semibold"
-            onClick={() => setShowModal(true)}
-          >
-            <FiPlus /> New Adjustment
-          </button>
+          <div className="d-flex gap-2">
+            <button 
+              className="btn btn-outline-primary btn-sm px-3 fw-bold d-flex align-items-center gap-2"
+              onClick={() => setShowActivityModal(true)}
+            >
+              <FiList /> Recent Movements
+            </button>
+            <button 
+              className="btn btn-primary d-flex align-items-center gap-2 px-3 btn-sm fw-semibold"
+              onClick={() => setShowModal(true)}
+            >
+              <FiPlus /> New Adjustment
+            </button>
+          </div>          
         </div>
 
         <div className="row g-4">
@@ -101,8 +146,22 @@ export default function InventoryPage() {
           <div className="col-lg-9">
             <div className="card premium-card border-0 rounded-3">
               <div className="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
-                <FiGrid className="text-secondary" />
-                <h6 className="mb-0 fw-bold">Stock Balances</h6>
+                <div className="d-flex align-items-center justify-content-between w-100">
+                  <div className="d-flex align-items-center gap-2">
+                    <FiGrid className="text-secondary" />
+                    <h6 className="mb-0 fw-bold">Stock Balances</h6>
+                  </div>
+                  <div className="input-group input-group-sm" style={{width: '200px'}}>
+                    <input 
+                      type="text" 
+                      className="form-control form-control-sm border-end-0 shadow-none" 
+                      placeholder="Filter stocks..." 
+                      value={stockSearch}
+                      onChange={(e) => setStockSearch(e.target.value)}
+                    />
+                    <span className="input-group-text bg-white border-start-0 text-secondary"><FiList style={{fontSize: '0.7rem'}} /></span>
+                  </div>
+                </div>
               </div>
               <div className="card-body p-0">
                 <div className="table-responsive">
@@ -133,7 +192,13 @@ export default function InventoryPage() {
                             </span>
                           </td>
                           <td className="px-4 text-end">
-                            <button className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold" style={{fontSize: '0.75rem'}}>View Ledger</button>
+                            <Link 
+                              to={`/inventory/ledger?search=${encodeURIComponent(item.sku)}`} 
+                              className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold" 
+                              style={{fontSize: '0.75rem'}}
+                            >
+                              View Ledger
+                            </Link>
                           </td>
                         </tr>
                       ))}
@@ -155,56 +220,6 @@ export default function InventoryPage() {
                 <div className="d-flex justify-content-between align-items-center">
                   <span className="small opacity-75">Low Stock</span>
                   <span className="fw-bold text-warning">{stockLevels.filter(i => i.stock < 10).length}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Movement Ledger */}
-          <div className="col-12">
-            <div className="card premium-card border-0 rounded-3 mt-2">
-              <div className="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
-                <FiList className="text-secondary" />
-                <h6 className="mb-0 fw-bold">Recent Activities</h6>
-              </div>
-              <div className="card-body p-0">
-                <div className="table-responsive">
-                  <table className="table align-middle mb-0 small">
-                    <thead>
-                      <tr>
-                        <th className="px-4">Timestamp</th>
-                        <th>Item</th>
-                        <th>Warehouse</th>
-                        <th>Supplier</th>
-                        <th className="text-center">Action</th>
-                        <th className="text-end">Quantity</th>
-                        <th className="px-4">Note</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ledger.map((entry) => (
-                        <tr key={entry.id}>
-                          <td className="px-4 text-secondary" style={{fontSize: '0.75rem'}}>
-                            {new Date(entry.created_at).toLocaleDateString()} {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="fw-semibold">{entry.product?.name}</td>
-                          <td className="text-secondary">{entry.warehouse?.name}</td>
-                          <td className="text-secondary small">{entry.vendor?.name || '-'}</td>
-                          <td className="text-center">
-                            <span className={entry.type === 'addition' ? 'text-success' : 'text-danger'}>
-                              {entry.type === 'addition' ? 'Stock In' : 'Stock Out'}
-                            </span>
-                          </td>
-                          <td className={`text-end fw-bold ${entry.type === 'addition' ? 'text-success' : 'text-danger'}`}>
-                            {entry.type === 'addition' ? '+' : '-'}{entry.quantity}
-                          </td>
-                          <td className="px-4 text-muted small">
-                            {entry.note || '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>
@@ -300,6 +315,65 @@ export default function InventoryPage() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Activity Summary Modal */}
+      {showActivityModal && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999}}>
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className="modal-content border-0 rounded-3 shadow-lg">
+              <div className="modal-header border-bottom bg-light px-4 py-3">
+                <div className="d-flex align-items-center gap-2">
+                  <FiList className="text-primary" />
+                  <h6 className="modal-title fw-bold m-0">Recent Stock Movements</h6>
+                </div>
+                <button type="button" className="btn-close shadow-none" onClick={() => setShowActivityModal(false)}></button>
+              </div>
+              <div className="modal-body p-0">
+                <div className="table-responsive">
+                  <table className="table align-middle mb-0 small">
+                    <thead className="bg-light">
+                      <tr>
+                        <th className="px-4 py-3">Date</th>
+                        <th>Item</th>
+                        <th>Type</th>
+                        <th className="text-end">Qty</th>
+                        <th className="px-4">Warehouse</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ledger.length > 0 ? ledger.map((entry) => (
+                        <tr key={entry.id}>
+                          <td className="px-4 text-secondary" style={{fontSize: '0.75rem'}}>
+                            {new Date(entry.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="fw-semibold py-3">{entry.product?.name}</td>
+                          <td>
+                            <span className={entry.type === 'addition' ? 'text-success' : 'text-danger'}>
+                              {entry.type === 'addition' ? 'In' : 'Out'}
+                            </span>
+                          </td>
+                          <td className={`text-end fw-bold ${entry.type === 'addition' ? 'text-success' : 'text-danger'}`}>
+                            {entry.type === 'addition' ? '+' : '-'}{parseInt(entry.quantity)}
+                          </td>
+                          <td className="px-4 text-secondary">{entry.warehouse?.name}</td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan="5" className="text-center py-5 text-secondary">No recent movements found.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="modal-footer border-top bg-light p-3">
+                <Link to="/inventory/ledger" className="btn btn-primary btn-sm px-4 fw-bold">
+                  View Full Activity History <FiList className="ms-1" />
+                </Link>
               </div>
             </div>
           </div>

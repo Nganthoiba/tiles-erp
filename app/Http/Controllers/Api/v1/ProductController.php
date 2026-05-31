@@ -4,13 +4,37 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    protected $inventoryService;
+
+    public function __construct(InventoryService $inventoryService)
+    {
+        $this->inventoryService = $inventoryService;
+    }
+
     public function index(Request $request)
     {
-        $products = Product::with(['category', 'baseUnit'])->latest()->paginate(10);
+        $query = Product::with(['category', 'baseUnit'])->latest();
+
+        if ($request->has('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->paginate(10);
+
+        $products->getCollection()->transform(function ($product) {
+            $product->stock_balance = $this->inventoryService->getCurrentStock($product);
+            return $product;
+        });
+
         return response()->json($products);
     }
 
@@ -30,7 +54,7 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        return response()->json(Product::with(['category', 'baseUnit', 'unitConversions.unit'])->findOrFail($id));
+        return response()->json(Product::with(['category', 'baseUnit', 'unitConversions.fromUnit', 'unitConversions.toUnit'])->findOrFail($id));
     }
 
     public function update(Request $request, $id)

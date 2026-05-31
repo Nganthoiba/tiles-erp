@@ -91,7 +91,7 @@ class InventoryService
      */
     public function convertToBase(Product $product, float $quantity, int $unitId): float
     {
-        if ($unitId === $product->base_unit_id) {
+        if ((int)$unitId === (int)$product->base_unit_id) {
             return $quantity;
         }
 
@@ -122,7 +122,7 @@ class InventoryService
      */
     public function convertFromBase(Product $product, float $baseQuantity, int $unitId): float
     {
-        if ($unitId === $product->base_unit_id) {
+        if ((int)$unitId === (int)$product->base_unit_id) {
             return $baseQuantity;
         }
 

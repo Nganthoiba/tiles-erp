@@ -15,7 +15,8 @@ import {
   FiUser,
   FiUsers,
   FiPackage,
-  FiShoppingCart
+  FiShoppingCart,
+  FiList
 } from 'react-icons/fi';
 
 export default function DashboardLayout({ children }) {
@@ -39,6 +40,7 @@ export default function DashboardLayout({ children }) {
     { icon: <FiPackage />, label: 'Products', path: '/products', permission: 'manage-products' },
     { icon: <FiUsers />, label: 'Vendors', path: '/vendors', permission: 'manage-products' },
     { icon: <FiShoppingCart />, label: 'Inventory', path: '/inventory', permission: 'manage-inventory' },
+    { icon: <FiList />, label: 'Stock Ledger', path: '/inventory/ledger', permission: 'manage-inventory' },
     { path: '/quotations', label: 'Quotations', icon: <FiFileText />, permission: 'create-quotations' },
     { path: '/invoices', label: 'Invoices & Sales', icon: <FiClipboard />, permission: 'create-invoices' },
     { path: '/deliveries', label: 'Deliveries Tracker', icon: <FiTruck />, permission: 'manage-deliveries' },

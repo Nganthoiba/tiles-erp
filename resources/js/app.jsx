@@ -16,6 +16,7 @@ import DeliveriesPage from './pages/DeliveriesPage';
 import PaymentsPage from './pages/PaymentsPage';
 import ReportsPage from './pages/ReportsPage';
 import VendorsPage from './pages/VendorsPage';
+import StockLedgerPage from './pages/StockLedgerPage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../css/app.css';
@@ -67,6 +68,14 @@ function App() {
             element={
               <ProtectedRoute requiredPermission="manage-inventory">
                 <InventoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/ledger"
+            element={
+              <ProtectedRoute requiredPermission="manage-inventory">
+                <StockLedgerPage />
               </ProtectedRoute>
             }
           />
