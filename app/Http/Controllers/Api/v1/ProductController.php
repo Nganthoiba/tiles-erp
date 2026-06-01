@@ -18,17 +18,26 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'baseUnit'])->latest();
+        $query = Product::with(['category', 'baseUnit', 'type', 'brand', 'specValues.attribute'])->latest();
 
         if ($request->has('search')) {
             $search = $request->query('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%");
             });
         }
 
-        $products = $query->paginate(10);
+        if ($request->has('product_type_id')) {
+            $query->where('product_type_id', $request->product_type_id);
+        }
+
+        if ($request->has('brand_id')) {
+            $query->where('brand_id', $request->brand_id);
+        }
+
+        $products = $query->paginate(15);
 
         $products->getCollection()->transform(function ($product) {
             $product->stock_balance = $this->inventoryService->getCurrentStock($product);
@@ -43,16 +52,34 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|unique:products,sku',
+            'barcode' => 'nullable|string|unique:products,barcode',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
+            'product_type_id' => 'nullable|exists:product_types,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'base_unit_id' => 'required|exists:units,id',
-            'attributes' => 'nullable|array',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0',
+            'status' => 'nullable|string',
             'conversions' => 'nullable|array',
             'conversions.*.from_unit_id' => 'required|exists:units,id',
             'conversions.*.factor' => 'required|numeric|min:0.0001',
+            'specs' => 'nullable|array', // {attribute_id: value}
         ]);
 
         $product = Product::create($validated);
+
+        // Handle specifications
+        if ($request->has('specs')) {
+            foreach ($request->specs as $attrId => $value) {
+                if ($value !== null && $value !== '') {
+                    $product->specValues()->create([
+                        'spec_attribute_id' => $attrId,
+                        'value' => $value
+                    ]);
+                }
+            }
+        }
 
         if ($request->has('conversions')) {
             foreach ($request->conversions as $conv) {
@@ -64,12 +91,20 @@ class ProductController extends Controller
             }
         }
 
-        return response()->json($product->load('unitConversions'), 201);
+        return response()->json($product->load(['unitConversions', 'specValues.attribute', 'type', 'brand']), 201);
     }
 
     public function show($id)
     {
-        return response()->json(Product::with(['category', 'baseUnit', 'unitConversions.fromUnit', 'unitConversions.toUnit'])->findOrFail($id));
+        return response()->json(Product::with([
+            'category',
+            'baseUnit',
+            'type.specAttributes',
+            'brand',
+            'specValues.attribute',
+            'unitConversions.fromUnit',
+            'unitConversions.toUnit'
+        ])->findOrFail($id));
     }
 
     public function update(Request $request, $id)
@@ -79,17 +114,36 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|unique:products,sku,' . $id,
+            'barcode' => 'nullable|string|unique:products,barcode,' . $id,
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
+            'product_type_id' => 'nullable|exists:product_types,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'base_unit_id' => 'required|exists:units,id',
-            'attributes' => 'nullable|array',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0',
+            'status' => 'nullable|string',
             'is_active' => 'boolean',
             'conversions' => 'nullable|array',
             'conversions.*.from_unit_id' => 'required|exists:units,id',
             'conversions.*.factor' => 'required|numeric|min:0.0001',
+            'specs' => 'nullable|array',
         ]);
 
         $product->update($validated);
+
+        // Handle specifications
+        if ($request->has('specs')) {
+            $product->specValues()->delete();
+            foreach ($request->specs as $attrId => $value) {
+                if ($value !== null && $value !== '') {
+                    $product->specValues()->create([
+                        'spec_attribute_id' => $attrId,
+                        'value' => $value
+                    ]);
+                }
+            }
+        }
 
         if ($request->has('conversions')) {
             $product->unitConversions()->delete();
@@ -102,6 +156,6 @@ class ProductController extends Controller
             }
         }
 
-        return response()->json($product->load('unitConversions'));
+        return response()->json($product->load(['unitConversions', 'specValues.attribute', 'type', 'brand']));
     }
 }

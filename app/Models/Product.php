@@ -5,24 +5,48 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\HasAuditLog;
 
 class Product extends Model
 {
+    use HasAuditLog;
+
     protected $fillable = [
         'category_id',
+        'product_type_id',
+        'brand_id',
         'name',
         'sku',
+        'barcode',
         'description',
         'base_unit_id',
+        'purchase_price',
+        'sale_price',
         'image_path',
-        'attributes',
+        'status',
         'is_active'
     ];
 
     protected $casts = [
-        'attributes' => 'array',
+        'purchase_price' => 'decimal:2',
+        'sale_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(ProductType::class, 'product_type_id');
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function specValues(): HasMany
+    {
+        return $this->hasMany(ProductSpecValue::class);
+    }
 
     public function category(): BelongsTo
     {

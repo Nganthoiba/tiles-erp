@@ -10,9 +10,12 @@ use App\Models\Warehouse;
 
 class InventoryService
 {
-    /**
-     * Record a stock movement in the ledger.
-     */
+    protected $conversionService;
+
+    public function __construct(UnitConversionService $conversionService)
+    {
+        $this->conversionService = $conversionService;
+    }
     public function recordMovement(
         Product $product,
         Warehouse $warehouse,
@@ -42,6 +45,9 @@ class InventoryService
             'reference_id' => $referenceId,
             'note' => $note,
             'vendor_id' => $vendorId,
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
     }
 
@@ -95,30 +101,7 @@ class InventoryService
      */
     public function convertToBase(Product $product, float $quantity, int $unitId): float
     {
-        if ((int)$unitId === (int)$product->base_unit_id) {
-            return $quantity;
-        }
-
-        $conversion = UnitConversion::where('product_id', $product->id)
-            ->where('from_unit_id', $unitId)
-            ->where('to_unit_id', $product->base_unit_id)
-            ->first();
-
-        if (!$conversion) {
-            // Reverse lookup: Maybe there's a conversion from base to this unit
-            $reverse = UnitConversion::where('product_id', $product->id)
-                ->where('from_unit_id', $product->base_unit_id)
-                ->where('to_unit_id', $unitId)
-                ->first();
-
-            if ($reverse) {
-                return $quantity / $reverse->factor;
-            }
-
-            throw new \Exception("No unit conversion found for product {$product->sku} from unit ID {$unitId} to base unit.");
-        }
-
-        return $quantity * $conversion->factor;
+        return $this->conversionService->convertToBase($product, $quantity, $unitId);
     }
 
     /**
@@ -126,29 +109,6 @@ class InventoryService
      */
     public function convertFromBase(Product $product, float $baseQuantity, int $unitId): float
     {
-        if ((int)$unitId === (int)$product->base_unit_id) {
-            return $baseQuantity;
-        }
-
-        $conversion = UnitConversion::where('product_id', $product->id)
-            ->where('from_unit_id', $product->base_unit_id)
-            ->where('to_unit_id', $unitId)
-            ->first();
-
-        if (!$conversion) {
-            // Reverse lookup: Maybe there's a conversion from this unit to base
-            $reverse = UnitConversion::where('product_id', $product->id)
-                ->where('from_unit_id', $unitId)
-                ->where('to_unit_id', $product->base_unit_id)
-                ->first();
-
-            if ($reverse) {
-                return $baseQuantity / $reverse->factor;
-            }
-
-            throw new \Exception("No unit conversion found for product {$product->sku} from base unit to unit ID {$unitId}.");
-        }
-
-        return $baseQuantity * $conversion->factor;
+        return $this->conversionService->convertFromBase($product, $baseQuantity, $unitId);
     }
 }

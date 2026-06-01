@@ -111,42 +111,52 @@ export default function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
-                    <tr><td colSpan="5" className="text-center py-5">
-                      <div className="spinner-border spinner-border-sm text-primary me-2"></div>
-                      Loading products...
-                    </td></tr>
-                  ) : products.length === 0 ? (
-                    <tr><td colSpan="5" className="text-center py-5 text-secondary">No products found in catalog.</td></tr>
-                  ) : products.map(product => (
-                    <tr key={product.id}>
-                      <td className="px-4"><code className="text-secondary">{product.sku}</code></td>
-                      <td>
-                        <div className="fw-semibold text-dark">{product.name}</div>
-                        <div className="text-muted smaller">
-                          {product.attributes?.brand} {product.attributes?.size && `| ${product.attributes.size}`}
-                        </div>
-                        {product.description && (
-                          <div className="text-muted smaller mt-1 opacity-75" style={{fontSize: '0.7rem', fontStyle: 'italic'}}>
-                            {product.description}
+                    {loading ? (
+                      <tr><td colSpan="5" className="text-center py-5">
+                        <div className="spinner-border spinner-border-sm text-primary me-2"></div>
+                        Loading products...
+                      </td></tr>
+                    ) : products.length === 0 ? (
+                      <tr><td colSpan="5" className="text-center py-5 text-secondary">No products found in catalog.</td></tr>
+                    ) : products.map(product => (
+                      <tr key={product.id}>
+                        <td className="px-4">
+                          <code className="text-secondary">{product.sku}</code>
+                          {product.barcode && <div className="smaller text-muted opacity-50">{product.barcode}</div>}
+                        </td>
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="fw-semibold text-dark">{product.name}</div>
+                            {product.brand && <span className="badge bg-light text-primary border rounded-pill smaller">{product.brand.name}</span>}
                           </div>
-                        )}
-                      </td>
-                      <td>
-                        <span className="text-secondary">{product.category?.name}</span>
-                      </td>
-                      <td>{product.base_unit?.name}</td>
-                      <td className="text-end px-4">
-                        {/* Removed Add Stock button */}
-                        <Link 
-                          to={`/products/${product.id}/edit`}
-                          className="btn btn-link btn-sm text-decoration-none text-secondary"
-                        >
-                          Edit
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                          
+                          <div className="text-muted smaller d-flex flex-wrap gap-1 mt-1">
+                            {product.type && <span className="fw-bold text-secondary me-1">{product.type.name}</span>}
+                            {product.spec_values?.map((spec, i) => (
+                              <span key={spec.id}>
+                                {i > 0 && <span className="mx-1 text-light">|</span>}
+                                {spec.attribute.name}: {spec.value}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="text-secondary">{product.category?.name}</span>
+                        </td>
+                        <td>
+                          <div>{product.base_unit?.name}</div>
+                          {product.sale_price > 0 && <div className="smaller text-primary fw-bold">₹{product.sale_price}</div>}
+                        </td>
+                        <td className="text-end px-4">
+                          <Link 
+                            to={`/products/${product.id}/edit`}
+                            className="btn btn-link btn-sm text-decoration-none text-secondary"
+                          >
+                            Edit
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>

@@ -19,7 +19,10 @@ class StockLedger extends Model
         'reference_type',
         'reference_id',
         'note',
-        'vendor_id'
+        'vendor_id',
+        'user_id',
+        'ip_address',
+        'user_agent'
     ];
 
     protected $casts = [
