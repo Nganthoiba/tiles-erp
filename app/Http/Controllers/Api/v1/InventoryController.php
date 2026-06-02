@@ -152,7 +152,7 @@ class InventoryController extends Controller
             });
         }
 
-        $ledger = $query->paginate($request->query('per_page', 15));
+        $ledger = $query->paginate($request->query('per_page', 10));
 
         return response()->json($ledger);
     }
