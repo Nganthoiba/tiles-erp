@@ -15,7 +15,7 @@ use App\Http\Controllers\Api\v1\UnitController;
 use App\Http\Controllers\Api\v1\WarehouseController;
 use App\Http\Controllers\Api\v1\VendorController;
 use App\Http\Controllers\Api\v1\BrandController;
-use App\Http\Controllers\Api\v1\ProductTypeController;
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('warehouses', WarehouseController::class);
     Route::apiResource('vendors', VendorController::class);
     Route::get('/brands', [BrandController::class, 'index']);
-    Route::get('/product-types', [ProductTypeController::class, 'index']);
+
     Route::get('/units', [UnitController::class, 'index']);
 
     // Inventory

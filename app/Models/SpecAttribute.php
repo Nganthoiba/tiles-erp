@@ -8,9 +8,9 @@ class SpecAttribute extends Model
 {
     protected $fillable = ['name', 'slug', 'data_type'];
 
-    public function productTypes()
+    public function categories()
     {
-        return $this->belongsToMany(ProductType::class, 'product_type_attributes')
+        return $this->belongsToMany(Category::class, 'category_attributes')
             ->withPivot('is_required')
             ->withTimestamps();
     }

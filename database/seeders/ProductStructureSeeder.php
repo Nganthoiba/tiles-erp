@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-use App\Models\ProductType;
+use App\Models\Category;
 use App\Models\SpecAttribute;
 use App\Models\Brand;
 use Illuminate\Support\Str;
@@ -52,10 +52,8 @@ class ProductStructureSeeder extends Seeder
             );
         }
 
-        // 3. Create Product Types and Link Attributes
-
-        // TILE
-        $tile = ProductType::firstOrCreate(['slug' => 'tile'], ['name' => 'Tile', 'description' => 'Ceramic, Vitrified, and Wall tiles']);
+        // CATEGORIES
+        $tile = Category::updateOrCreate(['slug' => 'tile'], ['name' => 'Tile', 'description' => 'Ceramic, Vitrified, and Wall tiles']);
         $tile->specAttributes()->sync([
             $attrModels['Length (mm)']->id => ['is_required' => true],
             $attrModels['Width (mm)']->id => ['is_required' => true],
@@ -65,7 +63,7 @@ class ProductStructureSeeder extends Seeder
         ]);
 
         // SANITARY
-        $sanitary = ProductType::firstOrCreate(['slug' => 'sanitary'], ['name' => 'Sanitary', 'description' => 'Basins, Commodes, and Faucets']);
+        $sanitary = Category::updateOrCreate(['slug' => 'sanitary'], ['name' => 'Sanitary', 'description' => 'Basins, Commodes, and Faucets']);
         $sanitary->specAttributes()->sync([
             $attrModels['Length (mm)']->id => ['is_required' => false],
             $attrModels['Width (mm)']->id => ['is_required' => false],
@@ -75,7 +73,7 @@ class ProductStructureSeeder extends Seeder
         ]);
 
         // GRANITE
-        $granite = ProductType::firstOrCreate(['slug' => 'granite'], ['name' => 'Granite', 'description' => 'Granite and Marble slabs']);
+        $granite = Category::updateOrCreate(['slug' => 'granite'], ['name' => 'Granite', 'description' => 'Granite and Marble slabs']);
         $granite->specAttributes()->sync([
             $attrModels['Length (mm)']->id => ['is_required' => true],
             $attrModels['Width (mm)']->id => ['is_required' => true],

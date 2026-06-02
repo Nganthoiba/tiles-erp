@@ -13,7 +13,6 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
-        'product_type_id',
         'brand_id',
         'name',
         'sku',
@@ -33,10 +32,6 @@ class Product extends Model
         'is_active' => 'boolean',
     ];
 
-    public function type(): BelongsTo
-    {
-        return $this->belongsTo(ProductType::class, 'product_type_id');
-    }
 
     public function brand(): BelongsTo
     {

@@ -16,4 +16,11 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function specAttributes()
+    {
+        return $this->belongsToMany(SpecAttribute::class, 'category_attributes', 'category_id', 'spec_attribute_id')
+            ->withPivot('is_required')
+            ->withTimestamps();
+    }
 }

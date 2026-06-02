@@ -16,38 +16,36 @@ export default function ProductCreate() {
   
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
-  const [productTypes, setProductTypes] = useState([]);
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(false);
   const [conversions, setConversions] = useState([]);
   
-  const selectedTypeId = watch('product_type_id');
-  const [selectedType, setSelectedType] = useState(null);
+  const selectedCategoryId = watch('category_id');
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     // Fetch Master Data
     axios.get('/api/categories').then(res => setCategories(res.data));
     axios.get('/api/units').then(res => setUnits(res.data));
-    axios.get('/api/product-types').then(res => setProductTypes(res.data));
     axios.get('/api/brands').then(res => setBrands(res.data));
   }, []);
 
   useEffect(() => {
-    if (selectedTypeId) {
-      const type = productTypes.find(t => t.id === parseInt(selectedTypeId));
-      setSelectedType(type || null);
+    if (selectedCategoryId) {
+      const category = categories.find(c => c.id === parseInt(selectedCategoryId));
+      setSelectedCategory(category || null);
     } else {
-      setSelectedType(null);
+      setSelectedCategory(null);
     }
-  }, [selectedTypeId, productTypes]);
+  }, [selectedCategoryId, categories]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
       // Prepare Specs
       const specs = {};
-      if (selectedType) {
-        selectedType.spec_attributes.forEach(attr => {
+      if (selectedCategory) {
+        selectedCategory.spec_attributes.forEach(attr => {
           const val = data[`spec_${attr.id}`];
           if (val) specs[attr.id] = val;
         });
@@ -136,7 +134,7 @@ export default function ProductCreate() {
                   />
                 </div>
 
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <label className="form-label small fw-bold text-secondary">Category</label>
                   <select 
                     className={`form-select ${errors.category_id ? 'is-invalid' : ''}`}
@@ -147,7 +145,7 @@ export default function ProductCreate() {
                   </select>
                 </div>
 
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <label className="form-label small fw-bold text-secondary">Brand</label>
                   <select className="form-select" {...register('brand_id')}>
                     <option value="">Choose Brand</option>
@@ -155,16 +153,8 @@ export default function ProductCreate() {
                   </select>
                 </div>
 
-                <div className="col-md-4">
-                  <label className="form-label small fw-bold text-secondary">Product Type</label>
-                  <select className="form-select" {...register('product_type_id')}>
-                    <option value="">Select Type (Tile, Sanitary, etc.)</option>
-                    {productTypes.map(pt => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
-                  </select>
-                </div>
-
                 {/* Calculation Preview Helper */}
-                {selectedType && (watch('spec_1') || watch('spec_2')) && (
+                {selectedCategory && (watch('spec_1') || watch('spec_2')) && (
                   <div className="col-12 mt-4">
                     <div className="bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-3 p-3">
                       <div className="row align-items-center">
@@ -250,14 +240,14 @@ export default function ProductCreate() {
                 </div>
 
                 {/* Dynamic Specifications */}
-                {selectedType && (
+                {selectedCategory && selectedCategory.spec_attributes && selectedCategory.spec_attributes.length > 0 && (
                   <div className="col-12 mt-5">
                     <h6 className="mb-3 text-primary text-uppercase fw-bold ls-wide" style={{fontSize: '0.75rem'}}>
-                      Technical Specifications ({selectedType.name})
+                      Technical Specifications ({selectedCategory.name})
                     </h6>
                     <hr className="mt-0 mb-4 opacity-10" />
                     <div className="row g-3 p-4 bg-light rounded-3">
-                      {selectedType.spec_attributes.map(attr => (
+                      {selectedCategory.spec_attributes.map(attr => (
                         <div className="col-md-4" key={attr.id}>
                           <label className="form-label small fw-bold text-secondary">
                             {attr.name} {attr.pivot.is_required && <span className="text-danger">*</span>}

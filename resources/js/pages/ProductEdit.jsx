@@ -12,30 +12,27 @@ export default function ProductEdit() {
   
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
-  const [productTypes, setProductTypes] = useState([]);
   const [brands, setBrands] = useState([]);
   
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [conversions, setConversions] = useState([]);
   
-  const selectedTypeId = watch('product_type_id');
-  const [selectedType, setSelectedType] = useState(null);
+  const selectedCategoryId = watch('category_id');
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catRes, unitRes, typeRes, brandRes, prodRes] = await Promise.all([
+        const [catRes, unitRes, brandRes, prodRes] = await Promise.all([
           axios.get('/api/categories'),
           axios.get('/api/units'),
-          axios.get('/api/product-types'),
           axios.get('/api/brands'),
           axios.get(`/api/products/${id}`)
         ]);
         
         setCategories(catRes.data.data || catRes.data || []);
         setUnits(unitRes.data.data || unitRes.data || []);
-        setProductTypes(typeRes.data || []);
         setBrands(brandRes.data || []);
         
         const product = prodRes.data?.data || prodRes.data;
@@ -46,7 +43,6 @@ export default function ProductEdit() {
         setValue('sku', product.sku || '');
         setValue('barcode', product.barcode || '');
         setValue('category_id', product.category_id || '');
-        setValue('product_type_id', product.product_type_id || '');
         setValue('brand_id', product.brand_id || '');
         setValue('base_unit_id', product.base_unit_id || '');
         setValue('purchase_price', product.purchase_price || '');
@@ -81,21 +77,21 @@ export default function ProductEdit() {
   }, [id, setValue, navigate]);
 
   useEffect(() => {
-    if (selectedTypeId && productTypes.length > 0) {
-      const type = productTypes.find(t => t.id === parseInt(selectedTypeId));
-      setSelectedType(type || null);
+    if (selectedCategoryId && categories.length > 0) {
+      const category = categories.find(c => c.id === parseInt(selectedCategoryId));
+      setSelectedCategory(category || null);
     } else {
-      setSelectedType(null);
+      setSelectedCategory(null);
     }
-  }, [selectedTypeId, productTypes]);
+  }, [selectedCategoryId, categories]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
       // Prepare Specs
       const specs = {};
-      if (selectedType) {
-        selectedType.spec_attributes.forEach(attr => {
+      if (selectedCategory) {
+        selectedCategory.spec_attributes.forEach(attr => {
           const val = data[`spec_${attr.id}`];
           if (val) specs[attr.id] = val;
         });
@@ -187,7 +183,7 @@ export default function ProductEdit() {
                   <input type="text" className="form-control" {...register('barcode')} />
                 </div>
 
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <label className="form-label small fw-bold text-secondary">Category</label>
                   <select 
                     className={`form-select ${errors.category_id ? 'is-invalid' : ''}`}
@@ -198,7 +194,7 @@ export default function ProductEdit() {
                   </select>
                 </div>
 
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <label className="form-label small fw-bold text-secondary">Brand</label>
                   <select className="form-select" {...register('brand_id')}>
                     <option value="">Choose Brand</option>
@@ -206,16 +202,8 @@ export default function ProductEdit() {
                   </select>
                 </div>
 
-                <div className="col-md-4">
-                  <label className="form-label small fw-bold text-secondary">Product Type</label>
-                  <select className="form-select" {...register('product_type_id')}>
-                    <option value="">Select Type</option>
-                    {productTypes.map(pt => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
-                  </select>
-                </div>
-
                 {/* Calculation Preview Helper */}
-                {selectedType && (watch('spec_1') || watch('spec_2')) && (
+                {selectedCategory && (watch('spec_1') || watch('spec_2')) && (
                   <div className="col-12 mt-4">
                     <div className="bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-3 p-3">
                       <div className="row align-items-center">
@@ -301,14 +289,14 @@ export default function ProductEdit() {
                 </div>
 
                 {/* Dynamic Specifications */}
-                {selectedType && (
+                {selectedCategory && selectedCategory.spec_attributes && selectedCategory.spec_attributes.length > 0 && (
                   <div className="col-12 mt-5">
                     <h6 className="mb-3 text-primary text-uppercase fw-bold ls-wide" style={{fontSize: '0.75rem'}}>
-                      Technical Specifications ({selectedType.name})
+                      Technical Specifications ({selectedCategory.name})
                     </h6>
                     <hr className="mt-0 mb-4 opacity-10" />
                     <div className="row g-3 p-4 bg-light rounded-3 shadow-none border">
-                      {selectedType.spec_attributes.map(attr => (
+                      {selectedCategory.spec_attributes.map(attr => (
                         <div className="col-md-4" key={attr.id}>
                           <label className="form-label small fw-bold text-secondary">
                             {attr.name} {attr.pivot.is_required && <span className="text-danger">*</span>}
