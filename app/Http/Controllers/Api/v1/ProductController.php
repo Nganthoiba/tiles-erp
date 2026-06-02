@@ -18,7 +18,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'baseUnit', 'type', 'brand', 'specValues.attribute'])->latest();
+        $query = Product::with(['category.specAttributes', 'baseUnit', 'brand', 'specValues.attribute'])->latest();
 
         if ($request->has('search')) {
             $search = $request->query('search');
@@ -29,9 +29,6 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->has('product_type_id')) {
-            $query->where('product_type_id', $request->product_type_id);
-        }
 
         if ($request->has('brand_id')) {
             $query->where('brand_id', $request->brand_id);
@@ -55,7 +52,7 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|unique:products,barcode',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'product_type_id' => 'nullable|exists:product_types,id',
+
             'brand_id' => 'nullable|exists:brands,id',
             'base_unit_id' => 'required|exists:units,id',
             'purchase_price' => 'nullable|numeric|min:0',
@@ -91,7 +88,7 @@ class ProductController extends Controller
             }
         }
 
-        return response()->json($product->load(['unitConversions', 'specValues.attribute', 'type', 'brand']), 201);
+        return response()->json($product->load(['unitConversions', 'specValues.attribute', 'category', 'brand']), 201);
     }
 
     public function show($id)
@@ -99,7 +96,7 @@ class ProductController extends Controller
         return response()->json(Product::with([
             'category',
             'baseUnit',
-            'type.specAttributes',
+            'category.specAttributes',
             'brand',
             'specValues.attribute',
             'unitConversions.fromUnit',
@@ -117,7 +114,7 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|unique:products,barcode,' . $id,
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'product_type_id' => 'nullable|exists:product_types,id',
+
             'brand_id' => 'nullable|exists:brands,id',
             'base_unit_id' => 'required|exists:units,id',
             'purchase_price' => 'nullable|numeric|min:0',
@@ -156,6 +153,6 @@ class ProductController extends Controller
             }
         }
 
-        return response()->json($product->load(['unitConversions', 'specValues.attribute', 'type', 'brand']));
+        return response()->json($product->load(['unitConversions', 'specValues.attribute', 'category', 'brand']));
     }
 }

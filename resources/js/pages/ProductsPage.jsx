@@ -103,7 +103,7 @@ export default function ProductsPage() {
               <table className="table table-hover align-middle mb-0 small">
                 <thead>
                   <tr className="text-secondary">
-                    <th className="px-4">SKU</th>
+                    <th className="px-4">SKU / Item Code</th>
                     <th>Product Details</th>
                     <th>Category</th>
                     <th>Base Unit</th>
@@ -131,7 +131,6 @@ export default function ProductsPage() {
                           </div>
                           
                           <div className="text-muted smaller d-flex flex-wrap gap-1 mt-1">
-                            {product.type && <span className="fw-bold text-secondary me-1">{product.type.name}</span>}
                             {product.spec_values?.map((spec, i) => (
                               <span key={spec.id}>
                                 {i > 0 && <span className="mx-1 text-light">|</span>}

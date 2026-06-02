@@ -85,10 +85,12 @@ export default function ProductCreate() {
 
   return (
     <DashboardLayout>
-      <div className="container py-4">
+      <div className="container-fluid py-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4 className="fw-bold mb-0">New Product Entry</h4>
           <button onClick={() => navigate('/products')} className="btn btn-outline-secondary btn-sm px-3">
+            {/* Back arrow */}
+            <i className="bi bi-arrow-left me-2"></i>
             Back to Catalog
           </button>
         </div>
@@ -135,7 +137,7 @@ export default function ProductCreate() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Category</label>
+                  <label className="form-label small fw-bold text-secondary">Product Category</label>
                   <select 
                     className={`form-select ${errors.category_id ? 'is-invalid' : ''}`}
                     {...register('category_id', { required: 'Category is required' })}
