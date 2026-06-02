@@ -39,10 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/inventory/relocate', [InventoryController::class, 'relocate']);
 
     // Sales
-    Route::get('/quotations', [QuotationController::class, 'index']);
-    Route::post('/quotations', [QuotationController::class, 'store']);
-    Route::get('/invoices', [InvoiceController::class, 'index']);
+    Route::apiResource('quotations', QuotationController::class);
     Route::post('/quotations/{id}/convert', [InvoiceController::class, 'convertFromQuotation']);
+    Route::apiResource('invoices', InvoiceController::class)->only(['index', 'show']);
 
     // Contacts
     Route::get('/customers', [ContactController::class, 'customers']);

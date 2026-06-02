@@ -10,6 +10,9 @@ import ProductsPage from './pages/ProductsPage';
 import ProductCreate from './pages/ProductCreate';
 import ProductEdit from './pages/ProductEdit';
 import InventoryPage from './pages/InventoryPage';
+import QuotationCreate from './pages/QuotationCreate';
+import QuotationEdit from './pages/QuotationEdit';
+import QuotationDetail from './pages/QuotationDetail';
 import QuotationsPage from './pages/QuotationsPage';
 import InvoicesPage from './pages/InvoicesPage';
 import DeliveriesPage from './pages/DeliveriesPage';
@@ -84,6 +87,30 @@ function App() {
             element={
               <ProtectedRoute requiredPermission="create-quotations">
                 <QuotationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quotations/create"
+            element={
+              <ProtectedRoute requiredPermission="create-quotations">
+                <QuotationCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quotations/:id"
+            element={
+              <ProtectedRoute requiredPermission="create-quotations">
+                <QuotationDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quotations/:id/edit"
+            element={
+              <ProtectedRoute requiredPermission="create-quotations">
+                <QuotationEdit />
               </ProtectedRoute>
             }
           />
