@@ -135,7 +135,7 @@ export default function DashboardPage() {
         <div className="col-12 col-lg-8">
           <div className="card premium-card border-0 rounded-3 shadow-sm">
             <div className="card-header bg-white py-3 border-bottom">
-              <h6 className="fw-bold mb-0">Bestselling Items</h6>
+              <h6 className="fw-bold mb-0">Best Selling Items</h6>
             </div>
             <div className="card-body p-0">
               <div className="table-responsive">

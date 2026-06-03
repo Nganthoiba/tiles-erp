@@ -160,6 +160,7 @@ function App() {
   );
 }
 
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(registration => {
@@ -169,6 +170,7 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+*/
 
 ReactDOM.createRoot(document.getElementById('app')).render(
   <React.StrictMode>

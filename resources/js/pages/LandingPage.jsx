@@ -4,7 +4,7 @@ import { FiBox, FiTrendingUp, FiTruck, FiSmartphone, FiArrowRight } from 'react-
 
 export default function LandingPage() {
   return (
-    <div className="min-vh-100 d-flex flex-column bg-light font-sans">
+    <div className="min-vh-100 d-flex flex-column bg-light">
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3 shadow-sm">
         <div className="container">

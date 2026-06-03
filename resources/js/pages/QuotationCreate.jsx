@@ -108,7 +108,18 @@ export default function QuotationCreate() {
   const addItemRow = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { product_id: '', unit_id: '', quantity: 1, unit_price: 0, discount: 0, tax: 0, total_price: 0 }]
+      items: [
+        ...formData.items, 
+        { 
+          product_id: '', 
+          unit_id: '', 
+          quantity: 1, 
+          unit_price: 0, 
+          discount: 0, 
+          tax: 0, 
+          total_price: 0 
+        }
+      ]
     });
   };
 
@@ -183,6 +194,10 @@ export default function QuotationCreate() {
     menu: (base) => ({
       ...base,
       zIndex: 9999
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999
     })
   };
 
@@ -255,8 +270,8 @@ export default function QuotationCreate() {
 
               {/* Items Table */}
               <div className="card border-0 shadow-sm rounded-3">
-                <div className="card-body p-4">
-                  <div className="d-flex justify-content-between align-items-center mb-4">
+                <div className="card-body p-2">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
                     <h6 className="fw-bold text-uppercase mb-0 text-primary ls-wide" style={{fontSize: '0.75rem'}}>Quotation Items</h6>
                     <button type="button" onClick={addItemRow} className="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-none fw-semibold">
                       <FiPlus className="me-1" /> Add Row
@@ -267,9 +282,9 @@ export default function QuotationCreate() {
                     <table className="table table-borderless align-middle">
                       <thead>
                         <tr className="text-secondary small fw-bold border-bottom">
-                          <th style={{minWidth: '200px'}}>Product</th>
+                          <th style={{minWidth: '250px'}}>Product</th>
                           <th style={{width: '100px'}}>Quantity</th>
-                          <th style={{width: '120px'}}>Unit Price</th>
+                          <th style={{width: '120px'}}>Unit Price (₹)</th>
                           <th style={{width: '100px'}}>Discount (₹)</th>
                           <th className="text-end">Total (₹)</th>
                           <th style={{width: '50px'}}></th>
@@ -284,14 +299,16 @@ export default function QuotationCreate() {
                                 value={productOptions.find(opt => opt.value === parseInt(item.product_id))}
                                 onChange={(opt) => handleItemChange(index, 'product_id', opt.value)}
                                 styles={selectStyles}
-                                placeholder="Search Product..."
+                                placeholder="Search Your Product..."
                                 isSearchable
+                                menuPortalTarget={document.body}
+                                menuPlacement="auto"
                               />
                             </td>
                             <td>
                               <input 
                                 type="number" 
-                                className="form-control shadow-none bg-light border-0" 
+                                className="form-control form-control-sm shadow-none bg-light border-0" 
                                 value={item.quantity}
                                 onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
                                 min="0.0001"
@@ -300,11 +317,11 @@ export default function QuotationCreate() {
                               />
                             </td>
                             <td>
-                              <div className="input-group input-group-sm">
-                                <span className="input-group-text bg-light border-0">₹</span>
+                              <div className='small'>
+                                {/* className="input-group input-group-sm" <span className="input-group-text bg-light border-0">₹</span> */}
                                 <input 
                                   type="number" 
-                                  className="form-control shadow-none bg-light border-0" 
+                                  className="form-control form-control-sm shadow-none bg-light border-0" 
                                   value={item.unit_price}
                                   onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)}
                                   step="any"
@@ -315,14 +332,14 @@ export default function QuotationCreate() {
                             <td>
                               <input 
                                 type="number" 
-                                className="form-control shadow-none bg-light border-0" 
+                                className="form-control form-control-sm shadow-none bg-light border-0" 
                                 value={item.discount}
                                 onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
                                 step="any"
                               />
                             </td>
-                            <td className="text-end fw-bold text-dark">
-                              ₹{(item.quantity * item.unit_price - (item.discount || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                            <td className="text-end fw-bold text-dark small">
+                              {(item.quantity * item.unit_price - (item.discount || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
                             </td>
                             <td>
                               <button type="button" onClick={() => removeItemRow(index)} className="btn btn-link text-danger p-0 shadow-none">

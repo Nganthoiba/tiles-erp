@@ -1,8 +1,8 @@
 const CACHE_NAME = 'tiles-erp-v1';
 const urlsToCache = [
   '/',
-  '/css/app.css',
-  '/js/app.jsx',
+  '/resources/css/app.css',
+  '/resources/js/app.jsx',
 ];
 
 self.addEventListener('install', event => {

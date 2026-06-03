@@ -203,6 +203,10 @@ export default function QuotationEdit() {
     menu: (base) => ({
       ...base,
       zIndex: 9999
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999
     })
   };
 
@@ -295,7 +299,7 @@ export default function QuotationEdit() {
                         <tr className="text-secondary small fw-bold border-bottom">
                           <th style={{minWidth: '200px'}}>Product</th>
                           <th style={{width: '100px'}}>Quantity</th>
-                          <th style={{width: '120px'}}>Unit Price</th>
+                          <th style={{width: '120px'}}>Unit Price (₹)</th>
                           <th style={{width: '100px'}}>Discount (₹)</th>
                           <th className="text-end">Total (₹)</th>
                           <th style={{width: '50px'}}></th>
@@ -312,12 +316,14 @@ export default function QuotationEdit() {
                                 styles={selectStyles}
                                 placeholder="Search Product..."
                                 isSearchable
+                                menuPortalTarget={document.body}
+                                menuPlacement="auto"
                               />
                             </td>
                             <td>
                               <input 
                                 type="number" 
-                                className="form-control shadow-none bg-light border-0" 
+                                className="form-control form-control-sm shadow-none bg-light border-0" 
                                 value={item.quantity}
                                 onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
                                 min="0.0001"
@@ -326,11 +332,11 @@ export default function QuotationEdit() {
                               />
                             </td>
                             <td>
-                              <div className="input-group input-group-sm">
-                                <span className="input-group-text bg-light border-0">₹</span>
+                              <div className="small">
+                                {/* input-group input-group-sm <span className="input-group-text bg-light border-0">₹</span> */}
                                 <input 
                                   type="number" 
-                                  className="form-control shadow-none bg-light border-0" 
+                                  className="form-control form-control-sm shadow-none bg-light border-0" 
                                   value={item.unit_price}
                                   onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)}
                                   step="any"
@@ -341,14 +347,14 @@ export default function QuotationEdit() {
                             <td>
                               <input 
                                 type="number" 
-                                className="form-control shadow-none bg-light border-0" 
+                                className="form-control form-control-sm shadow-none bg-light border-0" 
                                 value={item.discount}
                                 onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
                                 step="any"
                               />
                             </td>
-                            <td className="text-end fw-bold text-dark">
-                              ₹{(item.quantity * item.unit_price - (item.discount || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                            <td className="text-end fw-bold text-dark small">
+                              {(item.quantity * item.unit_price - (item.discount || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
                             </td>
                             <td>
                               <button type="button" onClick={() => removeItemRow(index)} className="btn btn-link text-danger p-0 shadow-none">
