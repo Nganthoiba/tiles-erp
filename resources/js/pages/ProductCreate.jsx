@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
+import QuickAddModal from '../components/QuickAddModal';
 
 export default function ProductCreate() {
   const navigate = useNavigate();
@@ -21,7 +22,18 @@ export default function ProductCreate() {
   const [conversions, setConversions] = useState([]);
   
   const selectedCategoryId = watch('category_id');
+  const selectedBaseUnitId = watch('base_unit_id');
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Identify "Square Feet" unit
+  const isSqft = units.find(u => u.id === parseInt(selectedBaseUnitId))?.slug === 'sft';
+
+  // Quick Add Modal States
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showBrandModal, setShowBrandModal] = useState(false);
+
+  // Unit selections for specs
+  const [specUnits, setSpecUnits] = useState({});
 
   useEffect(() => {
     // Fetch Master Data
@@ -39,6 +51,16 @@ export default function ProductCreate() {
     }
   }, [selectedCategoryId, categories]);
 
+  const convertToMm = (val, unit) => {
+    const value = parseFloat(val);
+    if (isNaN(value)) return val;
+    switch (unit) {
+      case 'ft': return (value * 304.8).toFixed(2);
+      case 'cm': return (value * 10).toFixed(2);
+      default: return value;
+    }
+  };
+
   const onSubmit = async (data) => {
     setLoading(true);
     try {
@@ -46,7 +68,14 @@ export default function ProductCreate() {
       const specs = {};
       if (selectedCategory) {
         selectedCategory.spec_attributes.forEach(attr => {
-          const val = data[`spec_${attr.id}`];
+          let val = data[`spec_${attr.id}`];
+          const unit = specUnits[attr.id] || 'mm';
+          
+          // Apply conversion for dimensions
+          if (['len_mm', 'wid_mm', 'thk_mm', 'hgt_mm'].includes(attr.system_slug)) {
+            val = convertToMm(val, unit);
+          }
+          
           if (val) specs[attr.id] = val;
         });
       }
@@ -89,7 +118,6 @@ export default function ProductCreate() {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4 className="fw-bold mb-0">New Product Entry</h4>
           <button onClick={() => navigate('/products')} className="btn btn-outline-secondary btn-sm px-3">
-            {/* Back arrow */}
             <i className="bi bi-arrow-left me-2"></i>
             Back to Catalog
           </button>
@@ -137,7 +165,12 @@ export default function ProductCreate() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Product Category</label>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <label className="form-label small fw-bold text-secondary mb-0">Product Category</label>
+                    <button type="button" onClick={() => setShowCategoryModal(true)} className="btn btn-link p-0 text-decoration-none small">
+                      + Add New
+                    </button>
+                  </div>
                   <select 
                     className={`form-select ${errors.category_id ? 'is-invalid' : ''}`}
                     {...register('category_id', { required: 'Category is required' })}
@@ -148,7 +181,12 @@ export default function ProductCreate() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Brand</label>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <label className="form-label small fw-bold text-secondary mb-0">Brand</label>
+                    <button type="button" onClick={() => setShowBrandModal(true)} className="btn btn-link p-0 text-decoration-none small">
+                      + Add New
+                    </button>
+                  </div>
                   <select className="form-select" {...register('brand_id')}>
                     <option value="">Choose Brand</option>
                     {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -165,13 +203,19 @@ export default function ProductCreate() {
                           <div className="d-flex gap-4">
                             <div>
                                 <span className="h4 fw-bold text-dark mb-0 d-block">
-                                    {((watch('spec_1') || 0) * (watch('spec_2') || 0) / 1000000).toFixed(4)}
+                                    {(
+                                      convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') * 
+                                      convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') / 1000000
+                                    ).toFixed(4)}
                                 </span>
                                 <span className="smaller text-secondary">Square Meters (Sqm)</span>
                             </div>
                             <div>
                                 <span className="h4 fw-bold text-dark mb-0 d-block">
-                                    {((watch('spec_1') || 0) * (watch('spec_2') || 0) / 92903.04).toFixed(4)}
+                                    {(
+                                      convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') * 
+                                      convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') / 92903.04
+                                    ).toFixed(4)}
                                 </span>
                                 <span className="smaller text-secondary">Square Feet (Sqft)</span>
                             </div>
@@ -182,7 +226,11 @@ export default function ProductCreate() {
                           <div className="d-flex gap-4">
                             <div>
                                 <span className="h4 fw-bold text-dark mb-0 d-block">
-                                    {((watch('spec_1') || 0) * (watch('spec_2') || 0) * (watch('spec_5') || 1) / 1000000).toFixed(4)}
+                                    {(
+                                      convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') * 
+                                      convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') * 
+                                      (watch('spec_5') || 1) / 1000000
+                                    ).toFixed(4)}
                                 </span>
                                 <span className="smaller text-secondary">Sqm per Box</span>
                             </div>
@@ -249,20 +297,39 @@ export default function ProductCreate() {
                     </h6>
                     <hr className="mt-0 mb-4 opacity-10" />
                     <div className="row g-3 p-4 bg-light rounded-3">
-                      {selectedCategory.spec_attributes.map(attr => (
-                        <div className="col-md-4" key={attr.id}>
-                          <label className="form-label small fw-bold text-secondary">
-                            {attr.name} {attr.pivot.is_required && <span className="text-danger">*</span>}
-                          </label>
-                          <input 
-                            type={attr.data_type === 'number' ? 'number' : 'text'}
-                            step="any"
-                            className="form-control"
-                            placeholder={attr.name}
-                            {...register(`spec_${attr.id}`, { required: attr.pivot.is_required })}
-                          />
-                        </div>
-                      ))}
+                      {selectedCategory.spec_attributes.map(attr => {
+                        const isHidden = isSqft && ['len_mm', 'wid_mm'].includes(attr.system_slug);
+                        if (isHidden) return null;
+
+                        return (
+                          <div className="col-md-4" key={attr.id}>
+                            <label className="form-label small fw-bold text-secondary">
+                              {attr.name} {attr.pivot.is_required && <span className="text-danger">*</span>}
+                            </label>
+                            <div className={['len_mm', 'wid_mm', 'thk_mm', 'hgt_mm'].includes(attr.system_slug) ? 'input-group' : ''}>
+                              <input 
+                                type={attr.data_type === 'number' ? 'number' : 'text'}
+                                step="any"
+                                className="form-control"
+                                placeholder={attr.name}
+                                {...register(`spec_${attr.id}`, { required: attr.pivot.is_required && !isHidden })}
+                              />
+                              {['len_mm', 'wid_mm', 'thk_mm', 'hgt_mm'].includes(attr.system_slug) && (
+                                <select 
+                                  className="form-select border-start-0" 
+                                  style={{ maxWidth: '80px' }}
+                                  value={specUnits[attr.id] || 'mm'}
+                                  onChange={(e) => setSpecUnits({...specUnits, [attr.id]: e.target.value})}
+                                >
+                                  <option value="mm">mm</option>
+                                  <option value="cm">cm</option>
+                                  <option value="ft">ft</option>
+                                </select>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -270,7 +337,7 @@ export default function ProductCreate() {
                 {/* Submit */}
                 <div className="col-12 mt-5 pt-3 border-top">
                   <button type="submit" className="btn btn-primary px-5 py-2 fw-bold shadow-sm" disabled={loading}>
-                    {loading ? 'Register Product' : 'Register Product'}
+                    Register Product
                   </button>
                 </div>
               </div>
@@ -278,6 +345,28 @@ export default function ProductCreate() {
           </div>
         </div>
       </div>
+
+      {showCategoryModal && (
+        <QuickAddModal 
+          type="category" 
+          onAdded={(newCat) => {
+            setCategories([...categories, newCat]);
+            setValue('category_id', newCat.id);
+          }}
+          onClose={() => setShowCategoryModal(false)}
+        />
+      )}
+
+      {showBrandModal && (
+        <QuickAddModal 
+          type="brand" 
+          onAdded={(newBrand) => {
+            setBrands([...brands, newBrand]);
+            setValue('brand_id', newBrand.id);
+          }}
+          onClose={() => setShowBrandModal(false)}
+        />
+      )}
     </DashboardLayout>
   );
 }

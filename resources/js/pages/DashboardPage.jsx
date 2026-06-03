@@ -108,7 +108,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions Panel */}
       <div className="card premium-card p-3 mb-4 border-0 shadow-sm rounded-3">
-        <h6 className="fw-bold text-dark mb-3 small opacity-75 text-uppercase">Direct Actions</h6>
+        <h6 className="fw-bold text-dark mb-3 small opacity-75 text-uppercase">Quick Actions</h6>
         <div className="d-flex flex-wrap gap-2">
           {quickActions.map((action, i) => {
             if (action.permission && !user?.permissions?.includes(action.permission)) {

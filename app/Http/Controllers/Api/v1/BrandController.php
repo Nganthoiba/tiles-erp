@@ -12,4 +12,18 @@ class BrandController extends Controller
     {
         return response()->json(Brand::all());
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:brands,name',
+        ]);
+
+        $brand = Brand::create([
+            'name' => $request->name,
+            'slug' => \Illuminate\Support\Str::slug($request->name),
+        ]);
+
+        return response()->json($brand, 201);
+    }
 }
