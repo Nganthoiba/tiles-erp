@@ -2,10 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
-use App\Models\Product;
 use App\Models\ProductUnit;
-use App\Models\UnitConversion;
 use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
 
@@ -16,57 +13,19 @@ class MasterDataSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Units
-        $piece = ProductUnit::create(['name' => 'Piece', 'slug' => 'piece', 'is_base' => true]);
-        $box = ProductUnit::create(['name' => 'Box', 'slug' => 'box', 'is_base' => false]);
-        $sft = ProductUnit::create(['name' => 'Square Feet', 'slug' => 'sft', 'is_base' => false]);
+        // 1. Units (mapped to 'units' table via ProductUnit model)
+        ProductUnit::firstOrCreate(['slug' => 'piece'], ['name' => 'Piece', 'is_base' => true]);
+        ProductUnit::firstOrCreate(['slug' => 'box'],   ['name' => 'Box',   'is_base' => false]);
+        ProductUnit::firstOrCreate(['slug' => 'sft'],   ['name' => 'Square Feet', 'is_base' => false]);
 
-        // 2. Categories
-        $tiles = Category::create(['name' => 'Tiles', 'slug' => 'tiles', 'description' => 'Floor and Wall Tiles']);
-        $sanitary = Category::create(['name' => 'Sanitaryware', 'slug' => 'sanitaryware', 'description' => 'Basins, Closets, etc.']);
-
-        // 3. Warehouses
-        Warehouse::create(['name' => 'Main Warehouse', 'slug' => 'main-wh', 'code' => 'MWH01', 'address' => 'Industrial Area, Block A']);
-        Warehouse::create(['name' => 'Retail Showroom', 'slug' => 'showroom', 'code' => 'SR001', 'address' => 'City Center, Shop 42']);
-
-        // 4. Sample Product: Kajaria Tiles (60x60 cm)
-        // 1 Box = 4 Pieces (60x60 cm * 4 = 1.44 SQM ... but let's use SFT for simplicity as per user req)
-        // Say 1 Box = 10 Pieces = 14.4 SFT
-        $kajaria = Product::create([
-            'category_id' => $tiles->id,
-            'name' => 'Kajaria Glazed Ceramic Tiles (60x60 cm)',
-            'sku' => 'T-KAJ-6060',
-            'base_unit_id' => $piece->id,
-            'attributes' => [
-                'size' => '60x60 cm',
-                'material' => 'Ceramic',
-                'color' => 'Beige',
-                'brand' => 'Kajaria'
-            ]
-        ]);
-
-        // Unit Conversions: 1 Box -> 10 Pieces
-        UnitConversion::create([
-            'product_id' => $kajaria->id,
-            'from_unit_id' => $box->id,
-            'to_unit_id' => $piece->id,
-            'factor' => 10.0000
-        ]);
-
-        // Unit Conversions: 1 Piece -> 1.44 SFT
-        UnitConversion::create([
-            'product_id' => $kajaria->id,
-            'from_unit_id' => $piece->id,
-            'to_unit_id' => $sft->id,
-            'factor' => 1.4400
-        ]);
-
-        // Unit Conversions: 1 Box -> 14.4 SFT
-        UnitConversion::create([
-            'product_id' => $kajaria->id,
-            'from_unit_id' => $box->id,
-            'to_unit_id' => $sft->id,
-            'factor' => 14.4000
-        ]);
+        // 2. Warehouses
+        Warehouse::firstOrCreate(
+            ['code' => 'MWH01'],
+            ['name' => 'Main Warehouse', 'slug' => 'main-wh', 'address' => 'Industrial Area, Block A']
+        );
+        Warehouse::firstOrCreate(
+            ['code' => 'SR001'],
+            ['name' => 'Retail Showroom', 'slug' => 'showroom', 'address' => 'City Center, Shop 42']
+        );
     }
 }
