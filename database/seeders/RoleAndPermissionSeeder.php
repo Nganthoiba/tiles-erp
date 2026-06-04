@@ -105,7 +105,7 @@ class RoleAndPermissionSeeder extends Seeder
         $roleModels['delivery']->permissions()->sync($deliveryPerms);
 
         // 4. Create Seed Users
-        $defaultPassword = 'password123';
+        $defaultPassword = Hash::make('password123');
 
         $users = [
             [
@@ -146,13 +146,15 @@ class RoleAndPermissionSeeder extends Seeder
         ];
 
         foreach ($users as $u) {
-            $user = User::create([
-                'name' => $u['name'],
-                'email' => $u['email'],
-                'password' => $defaultPassword,
-            ]);
+            $user = User::firstOrCreate(
+                ['email' => $u['email']],
+                [
+                    'name'     => $u['name'],
+                    'password' => $defaultPassword,
+                ]
+            );
 
-            $user->roles()->attach($roleModels[$u['role']]->id);
+            $user->roles()->syncWithoutDetaching([$roleModels[$u['role']]->id]);
         }
     }
 }
