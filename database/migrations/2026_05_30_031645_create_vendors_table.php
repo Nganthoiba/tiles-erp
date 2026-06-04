@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('vendors', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->enum('vendor_category', ['Medium', 'Local', 'Global', 'Small', 'Large', 'Specialty'])->default('Local');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
             $table->string('landmark')->nullable();
-            $table->enum('vendor_group', ['Manufacturer', 'Supplier', 'Distributor'])->default('Supplier');
-            $table->enum('vendor_category', ['Medium', 'Local', 'Global', 'Small', 'Large', 'Specialty'])->default('Local')->after('name');
+            $table->enum('vendor_group', ['Manufacturer', 'Supplier', 'Distributor'])->default('Supplier');            
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
