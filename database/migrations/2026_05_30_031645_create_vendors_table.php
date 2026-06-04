@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
             $table->string('landmark')->nullable();
-            $table->enum('category', ['Manufacturer', 'Supplier', 'Distributor'])->default('Supplier');
+            $table->enum('vendor_group', ['Manufacturer', 'Supplier', 'Distributor'])->default('Supplier');
+            $table->enum('vendor_category', ['Medium', 'Local', 'Global', 'Small', 'Large', 'Specialty'])->default('Local')->after('name');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
