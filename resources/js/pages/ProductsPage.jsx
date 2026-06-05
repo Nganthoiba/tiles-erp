@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { FiPlus, FiBox, FiCheck } from 'react-icons/fi';
 import { useForm } from 'react-hook-form';
@@ -35,7 +35,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/products', {
+      const response = await api.get('/api/products', {
         params: { search: debouncedSearch }
       });
       // The API returns a paginated response or a simple array
@@ -51,7 +51,7 @@ export default function ProductsPage() {
 
   const fetchWarehouses = async () => {
     try {
-      const response = await axios.get('/api/warehouses');
+      const response = await api.get('/api/warehouses');
       setWarehouses(response.data);
     } catch (err) {
       console.error(err);
@@ -60,7 +60,7 @@ export default function ProductsPage() {
 
   const fetchVendors = async () => {
     try {
-      const response = await axios.get('/api/vendors');
+      const response = await api.get('/api/vendors');
       const data = response.data.data || response.data;
       setVendors(Array.isArray(data) ? data.filter(v => v.is_active) : []);
     } catch (err) {

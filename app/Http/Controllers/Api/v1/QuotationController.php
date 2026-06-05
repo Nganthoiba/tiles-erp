@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Quotation;
+use App\Models\Customer;
+use App\Models\Dealer;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +21,12 @@ class QuotationController extends Controller
 
     public function index(Request $request)
     {
-        $query = Quotation::with(['contact', 'items.product'])->latest();
+        $query = Quotation::latest();
 
         if ($request->has('search')) {
             $search = $request->query('search');
             $query->where('quotation_number', 'like', "%{$search}%")
-                ->orWhereHasMorph('contact', ['App\Models\Customer', 'App\Models\Dealer'], function ($q) use ($search) {
+                ->orWhereHasMorph('contact', [Customer::class, Dealer::class], function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%");
                 });
         }

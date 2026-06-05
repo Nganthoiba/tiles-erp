@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useForm } from 'react-hook-form';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
@@ -20,7 +20,7 @@ export default function VendorsPage() {
   const fetchVendors = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/vendors');
+      const response = await api.get('/api/vendors');
       setVendors(response.data);
     } catch (error) {
       console.error('Error fetching vendors:', error);
@@ -48,10 +48,10 @@ export default function VendorsPage() {
   const onSubmit = async (data) => {
     try {
       if (editingVendor) {
-        await axios.put(`/api/vendors/${editingVendor.id}`, data);
+        await api.put(`/api/vendors/${editingVendor.id}`, data);
         Swal.fire({ icon: 'success', title: 'Updated!', text: 'Vendor details updated.', timer: 1500, showConfirmButton: false });
       } else {
-        await axios.post('/api/vendors', data);
+        await api.post('/api/vendors', data);
         Swal.fire({ icon: 'success', title: 'Created!', text: 'New vendor added.', timer: 1500, showConfirmButton: false });
       }
       setShowModal(false);
@@ -63,7 +63,7 @@ export default function VendorsPage() {
 
   const toggleStatus = async (vendor) => {
     try {
-      await axios.put(`/api/vendors/${vendor.id}`, { ...vendor, is_active: !vendor.is_active });
+      await api.put(`/api/vendors/${vendor.id}`, { ...vendor, is_active: !vendor.is_active });
       fetchVendors();
     } catch (error) {
       Swal.fire('Error', 'Failed to update status', 'error');

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { FiPrinter, FiEdit3, FiArrowLeft, FiCheckCircle, FiDownload } from 'react-icons/fi';
 import Swal from 'sweetalert2';
@@ -19,7 +19,7 @@ export default function QuotationDetail() {
 
   const fetchQuotation = async () => {
     try {
-      const response = await axios.get(`/api/quotations/${id}`);
+      const response = await api.get(`/api/quotations/${id}`);
       setQuotation(response.data);
     } catch (error) {
       console.error('Error fetching quotation:', error);
@@ -46,7 +46,7 @@ export default function QuotationDetail() {
 
     if (paidAmount !== undefined) {
       try {
-        await axios.post(`/api/quotations/${id}/convert`, { paid_amount: paidAmount });
+        await api.post(`/api/quotations/${id}/convert`, { paid_amount: paidAmount });
         Swal.fire('Success', 'Quotation converted to Invoice and stock adjusted.', 'success');
         fetchQuotation(); // Refresh status
       } catch (error) {

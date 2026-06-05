@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { FiList, FiArrowDown, FiArrowUp, FiRefreshCw } from 'react-icons/fi';
 
@@ -32,7 +32,7 @@ export default function StockLedgerPage() {
   const fetchLedger = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/inventory/ledger', {
+      const response = await api.get('/api/inventory/ledger', {
         params: { 
           search: debouncedSearch,
           page,

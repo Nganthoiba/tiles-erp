@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Customer extends Model
 {
@@ -12,14 +11,4 @@ class Customer extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
-
-    public function quotations(): MorphMany
-    {
-        return $this->morphMany('App\Models\Quotation', 'contact');
-    }
-
-    public function invoices(): MorphMany
-    {
-        return $this->morphMany('App\Models\Invoice', 'contact');
-    }
 }

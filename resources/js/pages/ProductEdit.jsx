@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import api from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 import QuickAddModal from '../components/QuickAddModal';
@@ -37,10 +37,10 @@ export default function ProductEdit() {
     const fetchData = async () => {
       try {
         const [catRes, unitRes, brandRes, prodRes] = await Promise.all([
-          axios.get('/api/categories'),
-          axios.get('/api/units'),
-          axios.get('/api/brands'),
-          axios.get(`/api/products/${id}`)
+          api.get('/api/categories'),
+          api.get('/api/units'),
+          api.get('/api/brands'),
+          api.get(`/api/products/${id}`)
         ]);
         
         setCategories(catRes.data.data || catRes.data || []);
@@ -135,7 +135,7 @@ export default function ProductEdit() {
         }))
       };
 
-      await axios.put(`/api/products/${id}`, payload);
+      await api.put(`/api/products/${id}`, payload);
       
       Swal.fire({
         icon: 'success',

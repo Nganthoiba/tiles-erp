@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { FiPlus, FiSearch, FiFileText, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import Swal from 'sweetalert2';
@@ -22,7 +22,8 @@ export default function QuotationsPage() {
   const fetchQuotations = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/quotations', { params });
+      const response = await api.get('/api/quotations', { params });
+      console.log('API Response:', response.data); // Debug log
       setQuotations(response.data.data);
       setPagination({
         current_page: response.data.current_page,
@@ -59,7 +60,7 @@ export default function QuotationsPage() {
       <div className="container-fluid py-3 px-md-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h4 className="fw-bold mb-0 text-dark">Sales Quotations</h4>
+            <h4 className="fw-bold mb-0 text-dark">Sales Quotationsss</h4>
             <p className="text-secondary small mb-0">Manage and track your sales offers</p>
           </div>
           <Link to="/quotations/create" className="btn btn-primary d-flex align-items-center gap-2 px-3 btn-sm fw-semibold shadow-sm">

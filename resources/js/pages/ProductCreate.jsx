@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import api from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 import QuickAddModal from '../components/QuickAddModal';
@@ -37,9 +37,9 @@ export default function ProductCreate() {
 
   useEffect(() => {
     // Fetch Master Data
-    axios.get('/api/categories').then(res => setCategories(res.data));
-    axios.get('/api/units').then(res => setUnits(res.data));
-    axios.get('/api/brands').then(res => setBrands(res.data));
+    api.get('/api/categories').then(res => setCategories(res.data));
+    api.get('/api/units').then(res => setUnits(res.data));
+    api.get('/api/brands').then(res => setBrands(res.data));
   }, []);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function ProductCreate() {
         }))
       };
 
-      await axios.post('/api/products', payload);
+      await api.post('/api/products', payload);
       
       Swal.fire({
         icon: 'success',

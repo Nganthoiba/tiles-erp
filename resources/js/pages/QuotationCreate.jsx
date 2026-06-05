@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { FiPlus, FiTrash2, FiSave, FiX, FiUserPlus } from 'react-icons/fi';
 import Swal from 'sweetalert2';
@@ -59,10 +59,10 @@ export default function QuotationCreate() {
   const fetchBaseData = async () => {
     try {
       const [custRes, dealerRes, prodRes, unitRes] = await Promise.all([
-        axios.get('/api/customers'),
-        axios.get('/api/dealers'),
-        axios.get('/api/products'),
-        axios.get('/api/units')
+        api.get('/api/customers'),
+        api.get('/api/dealers'),
+        api.get('/api/products'),
+        api.get('/api/units')
       ]);
       setCustomers(custRes.data.data || custRes.data);
       setDealers(dealerRes.data.data || dealerRes.data);
@@ -152,11 +152,11 @@ export default function QuotationCreate() {
     e.preventDefault();
     setSavingDealer(true);
     try{
-      const response = await axios.post('/api/dealers', newDealer);
+      const response = await api.post('/api/dealers', newDealer);
       Swal.fire('Success', 'Dealer created successfully', 'success');
 
       // Refresh Dealer list and auto select te new one
-      const dealerRes = await axios.get('api/dealers');
+      const dealerRes = await api.get('/api/dealers');
       const updatedDealers = dealerRes.data.data || dealerRes.data;
       setDealers(updatedDealers);
 
@@ -180,11 +180,11 @@ export default function QuotationCreate() {
     e.preventDefault();
     setSavingCustomer(true);
     try {
-      const response = await axios.post('/api/customers', newCustomer);
+      const response = await api.post('/api/customers', newCustomer);
       Swal.fire('Success', 'Customer created successfully', 'success');
       
       // Refresh customers list and auto-select the new one
-      const custRes = await axios.get('/api/customers');
+      const custRes = await api.get('/api/customers');
       const updatedCustomers = custRes.data.data || custRes.data;
       setCustomers(updatedCustomers);
       
@@ -212,7 +212,7 @@ export default function QuotationCreate() {
     
     setLoading(true);
     try {
-      await axios.post('/api/quotations', formData);
+      await api.post('/api/quotations', formData);
       Swal.fire('Success', 'Quotation created successfully', 'success');
       navigate('/quotations');
     } catch (err) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { useForm } from 'react-hook-form';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
@@ -56,7 +56,7 @@ export default function InventoryPage() {
 
   const fetchStockLevels = async () => {
     try {
-      const response = await axios.get('/api/inventory', {
+      const response = await api.get('/api/inventory', {
         params: { search: debouncedStockSearch }
       });
       setStockLevels(Array.isArray(response.data) ? response.data : []);
@@ -67,7 +67,7 @@ export default function InventoryPage() {
 
   const fetchLedger = async () => {
     try {
-      const response = await axios.get('/api/inventory/ledger', {
+      const response = await api.get('/api/inventory/ledger', {
         params: { per_page: 5 }
       });
       setLedger(response.data?.data || []);
@@ -79,11 +79,11 @@ export default function InventoryPage() {
     setLoading(true);
     try {
       const [stockRes, ledgerRes, prodRes, whRes, unitRes] = await Promise.all([
-        axios.get('/api/inventory', { params: { search: debouncedStockSearch } }),
-        axios.get('/api/inventory/ledger', { params: { per_page: 5 } }),
-        axios.get('/api/products'),
-        axios.get('/api/warehouses'),
-        axios.get('/api/units')
+        api.get('/api/inventory', { params: { search: debouncedStockSearch } }),
+        api.get('/api/inventory/ledger', { params: { per_page: 5 } }),
+        api.get('/api/products'),
+        api.get('/api/warehouses'),
+        api.get('/api/units')
       ]);
       setStockLevels(Array.isArray(stockRes.data) ? stockRes.data : []);
       setLedger(ledgerRes.data?.data || (Array.isArray(ledgerRes.data) ? ledgerRes.data : []));
@@ -100,7 +100,7 @@ export default function InventoryPage() {
 
   const fetchVendors = async () => {
     try {
-      const response = await axios.get('/api/vendors');
+      const response = await api.get('/api/vendors');
       setVendors(response.data.filter(v => v.is_active));
     } catch (err) {
       console.error(err);
@@ -109,7 +109,7 @@ export default function InventoryPage() {
 
   const handleAdjustStock = async (data) => {
     try {
-      await axios.post('/api/inventory/adjust', data);
+      await api.post('/api/inventory/adjust', data);
       Swal.fire({
         icon: 'success',
         title: 'Adjusted!',
@@ -131,7 +131,7 @@ export default function InventoryPage() {
   };
   const handleRelocateStock = async (data) => {
     try {
-      await axios.post('/api/inventory/relocate', {
+      await api.post('/api/inventory/relocate', {
         ...data,
         product_id: selectedItemForRelocate.id,
         warehouse_id: warehouses[0]?.id // Assuming first warehouse for simplicity as per current design
