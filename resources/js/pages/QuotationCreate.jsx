@@ -16,6 +16,8 @@ export default function QuotationCreate() {
 
   // Modal State
   const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [showDealerModal, setShowDealerModal] = useState(false);
+
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     email: '',
@@ -23,7 +25,18 @@ export default function QuotationCreate() {
     address: '',
     is_active: true
   });
+
+  const [newDealer, setNewDealer] = useState({
+    name: '',
+    company_name: '',
+    email: '',
+    phone: '',
+    address: '',
+    is_active: true
+  });
+
   const [savingCustomer, setSavingCustomer] = useState(false);
+  const [savingDealer, setSavingDealer] = useState(false);
 
   const [formData, setFormData] = useState({
     contact_id: '',
@@ -135,6 +148,34 @@ export default function QuotationCreate() {
     label: `${p.name} (${p.sku})`
   }));
 
+  const handleQuickDealerSubmit = async(e) => {
+    e.preventDefault();
+    setSavingDealer(true);
+    try{
+      const response = await axios.post('/api/dealers', newDealer);
+      Swal.fire('Success', 'Dealer created successfully', 'success');
+
+      // Refresh Dealer list and auto select te new one
+      const dealerRes = await axios.get('api/dealers');
+      const updatedDealers = dealerRes.data.data || dealerRes.data;
+      setDealers(updatedDealers);
+
+      setFormData({
+        ...formData, 
+        contact_type: 'App\\Models\\Dealer',
+        contact_id: response.data.id
+      });
+
+      setShowDealerModal(false);
+      setNewDealer({ name: '', company_name: '', email: '', phone: '', address: '', is_active: true });
+    }
+    catch (err) {
+      Swal.fire('Error', err.response?.data?.message || 'Could not create dealer', 'error');
+    } finally {
+      setSavingDealer(false);
+    }
+  }
+
   const handleQuickCustomerSubmit = async (e) => {
     e.preventDefault();
     setSavingCustomer(true);
@@ -233,15 +274,15 @@ export default function QuotationCreate() {
                     <div className="col-md-8">
                       <div className="d-flex justify-content-between align-items-end mb-2">
                         <label className="form-label small fw-bold text-secondary mb-0">Select {formData.contact_type.includes('Customer') ? 'Customer' : 'Dealer'}</label>
-                        {formData.contact_type.includes('Customer') && (
+                        {/* {formData.contact_type.includes('Customer') && ( */}
                           <button 
                             type="button" 
                             className="btn btn-link btn-sm p-0 m-0 text-decoration-none d-flex align-items-center gap-1 fw-bold text-primary"
-                            onClick={() => setShowCustomerModal(true)}
+                            onClick={() => formData.contact_type.includes('Customer')?setShowCustomerModal(true):setShowDealerModal(true)}
                           >
                             <FiUserPlus fontSize="0.9rem" /> Quick Add
                           </button>
-                        )}
+                        {/* )} */}
                       </div>
                       <select 
                         className="form-select shadow-none"
@@ -464,6 +505,77 @@ export default function QuotationCreate() {
                     <button type="button" className="btn btn-light btn-sm fw-bold px-3" onClick={() => setShowCustomerModal(false)}>Cancel</button>
                     <button type="submit" className="btn btn-primary btn-sm fw-bold px-4" disabled={savingCustomer}>
                       {savingCustomer ? <span className="spinner-border spinner-border-sm me-2"></span> : null}
+                      Register & Select
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Dealer Modal which is going to be shown after setShowDealerModal is invoked */}
+        {showDealerModal && (
+          <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content border-0 shadow-lg rounded-4">
+                <div className="modal-header border-0 pb-0">
+                  <h5 className="modal-title fw-bold">Quick Dealear Registration</h5>
+                  <button type="button" className="btn-close shadow-none" onClick={() => setShowDealerModal(false)}></button>
+                </div>
+                <form onSubmit={handleQuickDealerSubmit}>
+                  <div className="modal-body p-4">
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold text-secondary">Dealer Name</label>
+                      <input 
+                        type="text" 
+                        className="form-control shadow-none" 
+                        value={newDealer.name}
+                        onChange={(e) => setNewDealer({...newDealer, name: e.target.value})}
+                        required 
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className='form-label small fw-bold text-secondary'>Company Name</label>
+                      <input type="text" 
+                        className="form-control shadow-none" 
+                        value={newDealer.company_name} 
+                        onChange={(e) => setNewDealer({...newDealer, company_name: e.target.value})} 
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold text-secondary">Phone Number</label>
+                      <input 
+                        type="text" 
+                        className="form-control shadow-none" 
+                        value={newDealer.phone}
+                        onChange={(e) => setNewDealer({...newDealer, phone: e.target.value})}
+                        required 
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold text-secondary">Email (Optional)</label>
+                      <input 
+                        type="email" 
+                        className="form-control shadow-none" 
+                        value={newDealer.email}
+                        onChange={(e) => setNewDealer({...newDealer, email: e.target.value})}
+                      />
+                    </div>
+                    <div className="mb-0">
+                      <label className="form-label small fw-bold text-secondary">Address</label>
+                      <textarea 
+                        className="form-control shadow-none" 
+                        rows="2"
+                        value={newDealer.address}
+                        onChange={(e) => setNewDealer({...newDealer, address: e.target.value})}
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div className="modal-footer border-0 pt-0">
+                    <button type="button" className="btn btn-light btn-sm fw-bold px-3" onClick={() => setShowDealerModal(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary btn-sm fw-bold px-4" disabled={savingDealer}>
+                      {savingDealer ? <span className="spinner-border spinner-border-sm me-2"></span> : null}
                       Register & Select
                     </button>
                   </div>

@@ -214,6 +214,13 @@ export default function InventoryPage() {
                       </tr>
                     </thead>
                     <tbody>
+                      {/* If there are no stock levels, i.e. stockLevels.length == 0 */}
+                      {stockLevels.length == 0 && (
+                        <tr>
+                          <td colSpan="4" className="text-center py-3 text-secondary">No stock data found. Click the <strong>"+ New Adjustment"</strong> button to add stock.</td>
+                        </tr>
+                      )}
+
                       {stockLevels.map((item) => (
                         <tr key={item.id}>
                           <td className="px-4">
