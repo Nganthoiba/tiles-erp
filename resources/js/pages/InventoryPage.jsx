@@ -4,7 +4,7 @@ import api from '../services/api';
 import { useForm } from 'react-hook-form';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
-import { FiPlus, FiArrowDown, FiArrowUp, FiRefreshCw, FiGrid, FiList } from 'react-icons/fi';
+import { FiPlus, FiArrowDown, FiArrowUp, FiRefreshCw, FiGrid, FiList, FiX } from 'react-icons/fi';
 
 export default function InventoryPage() {
   const [stockLevels, setStockLevels] = useState([]);
@@ -22,7 +22,16 @@ export default function InventoryPage() {
   const [debouncedLedgerSearch, setDebouncedLedgerSearch] = useState('');
   const [showRelocateModal, setShowRelocateModal] = useState(false);
   const [selectedItemForRelocate, setSelectedItemForRelocate] = useState(null);
-  
+  const [isAddingVendorInline, setIsAddingVendorInline] = useState(false);
+  const [showAllDetails, setShowAllDetails] = useState(false);
+
+  const { register: registerVendor, handleSubmit: handleVendorSubmit, reset: resetVendor, formState: { errors: vendorErrors } } = useForm({
+    defaultValues: {
+      vendor_group: 'Supplier',
+      vendor_category: 'Local'
+    }
+  });
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedStockSearch(stockSearch), 500);
     return () => clearTimeout(timer);
@@ -37,7 +46,7 @@ export default function InventoryPage() {
   }, [showModal]);
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm();
-  
+
   const watchProductId = watch('product_id');
 
   useEffect(() => {
@@ -156,6 +165,39 @@ export default function InventoryPage() {
     }
   };
 
+  const handleQuickVendorSubmit = async (data) => {
+    try {
+      const response = await api.post('/api/vendors', data);
+      Swal.fire({
+        icon: 'success',
+        title: 'Created!',
+        text: 'New vendor added.',
+        timer: 1500,
+        showConfirmButton: false
+      });
+      setIsAddingVendorInline(false);
+      setShowAllDetails(false);
+      resetVendor();
+
+      // Reload vendors list
+      const res = await api.get('/api/vendors');
+      const activeVendors = res.data.filter(v => v.is_active);
+      setVendors(activeVendors);
+
+      // Auto select the new vendor in the dropdown
+      if (response.data && response.data.id) {
+        setValue('vendor_id', String(response.data.id));
+      }
+    } catch (error) {
+      console.error('Error creating vendor:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Failed to save vendor'
+      });
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="container-fluid py-3 px-md-4">
@@ -165,19 +207,19 @@ export default function InventoryPage() {
             <p className="text-secondary small mb-0">Real-time stock monitoring & manual movements</p>
           </div>
           <div className="d-flex gap-2">
-            <button 
+            <button
               className="btn btn-outline-primary btn-sm px-3 fw-bold d-flex align-items-center gap-2"
               onClick={() => setShowActivityModal(true)}
             >
               <FiList /> Recent Movements
             </button>
-            <button 
+            <button
               className="btn btn-primary d-flex align-items-center gap-2 px-3 btn-sm fw-semibold"
               onClick={() => setShowModal(true)}
             >
               <FiPlus /> New Adjustment
             </button>
-          </div>          
+          </div>
         </div>
 
         <div className="row g-4">
@@ -190,15 +232,15 @@ export default function InventoryPage() {
                     <FiGrid className="text-secondary" />
                     <h6 className="mb-0 fw-bold">Stock Balances</h6>
                   </div>
-                  <div className="input-group input-group-sm" style={{width: '200px'}}>
-                    <input 
-                      type="text" 
-                      className="form-control form-control-sm border-end-0 shadow-none" 
-                      placeholder="Filter stocks..." 
+                  <div className="input-group input-group-sm" style={{ width: '200px' }}>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm border-end-0 shadow-none"
+                      placeholder="Filter stocks..."
                       value={stockSearch}
                       onChange={(e) => setStockSearch(e.target.value)}
                     />
-                    <span className="input-group-text bg-white border-start-0 text-secondary"><FiList style={{fontSize: '0.7rem'}} /></span>
+                    <span className="input-group-text bg-white border-start-0 text-secondary"><FiList style={{ fontSize: '0.7rem' }} /></span>
                   </div>
                 </div>
               </div>
@@ -225,7 +267,7 @@ export default function InventoryPage() {
                         <tr key={item.id}>
                           <td className="px-4">
                             <div className="fw-semibold text-dark">{item.name}</div>
-                            <div className="text-muted d-flex align-items-center gap-2" style={{fontSize: '0.75rem'}}>
+                            <div className="text-muted d-flex align-items-center gap-2" style={{ fontSize: '0.75rem' }}>
                               <code>{item.sku}</code>
                               {item.locations?.length > 0 && (
                                 <span className="text-dark opacity-75">
@@ -244,22 +286,22 @@ export default function InventoryPage() {
                               {item.stock} {item.unit}
                             </span>
                           </td>
-                            <div className="d-flex align-items-center justify-content-end gap-3">
-                              <button 
-                                onClick={() => { setSelectedItemForRelocate(item); setShowRelocateModal(true); }}
-                                className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-primary" 
-                                style={{fontSize: '0.75rem'}}
-                              >
-                                Relocate
-                              </button>
-                              <Link 
-                                to={`/inventory/ledger?search=${encodeURIComponent(item.sku)}`} 
-                                className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold" 
-                                style={{fontSize: '0.75rem'}}
-                              >
-                                View Ledger
-                              </Link>
-                            </div>
+                          <div className="d-flex align-items-center justify-content-end gap-3">
+                            <button
+                              onClick={() => { setSelectedItemForRelocate(item); setShowRelocateModal(true); }}
+                              className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-primary"
+                              style={{ fontSize: '0.75rem' }}
+                            >
+                              Relocate
+                            </button>
+                            <Link
+                              to={`/inventory/ledger?search=${encodeURIComponent(item.sku)}`}
+                              className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold"
+                              style={{ fontSize: '0.75rem' }}
+                            >
+                              View Ledger
+                            </Link>
+                          </div>
                         </tr>
                       ))}
                     </tbody>
@@ -289,18 +331,18 @@ export default function InventoryPage() {
 
       {/* Adjustment Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999}}>
-          <div className="modal-dialog modal-dialog-centered">
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999 }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content border-0 rounded-3 shadow-lg">
               <div className="modal-header border-bottom bg-light px-4 py-3">
                 <h6 className="modal-title fw-bold m-0">Manual Stock Adjustment</h6>
-                <button type="button" className="btn-close shadow-none" style={{fontSize: '0.8rem'}} onClick={() => setShowModal(false)}></button>
+                <button type="button" className="btn-close shadow-none" style={{ fontSize: '0.8rem' }} onClick={() => setShowModal(false)}></button>
               </div>
               <div className="modal-body p-4">
                 <form onSubmit={handleSubmit(handleAdjustStock)}>
                   <div className="mb-3">
                     <label className="form-label small fw-bold text-secondary">Product</label>
-                    <select 
+                    <select
                       className={`form-select ${errors.product_id ? 'is-invalid' : ''}`}
                       {...register('product_id', { required: true })}
                     >
@@ -308,10 +350,10 @@ export default function InventoryPage() {
                       {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
                     </select>
                   </div>
-                  
+
                   <div className="mb-3">
                     <label className="form-label small fw-bold text-secondary">Warehouse</label>
-                    <select 
+                    <select
                       className={`form-select ${errors.warehouse_id ? 'is-invalid' : ''}`}
                       {...register('warehouse_id', { required: true })}
                     >
@@ -323,27 +365,27 @@ export default function InventoryPage() {
                   <div className="row g-3 mb-3">
                     <div className="col-md-6">
                       <label className="form-label small fw-bold text-secondary">Rack Number (Optional)</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        placeholder="e.g. R-01" 
-                        {...register('rack_number')} 
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="e.g. R-01"
+                        {...register('rack_number')}
                       />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label small fw-bold text-secondary">Slot Number (Optional)</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        placeholder="e.g. S-05" 
-                        {...register('slot_number')} 
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="e.g. S-05"
+                        {...register('slot_number')}
                       />
                     </div>
 
                     <div className="col-md-6">
                       <label className="form-label small fw-bold text-secondary">Quantity</label>
                       <div className="input-group">
-                        <input 
+                        <input
                           type="number" step="0.0001"
                           className={`form-control ${errors.quantity ? 'is-invalid' : ''}`}
                           {...register('quantity', { required: true, min: 1 })}
@@ -375,10 +417,146 @@ export default function InventoryPage() {
 
                   <div className="mb-3">
                     <label className="form-label small fw-bold text-secondary">Supplier / Vendor (Optional)</label>
-                    <select className="form-select form-select-sm" {...register('vendor_id')}>
-                      <option value="">Select Vendor</option>
-                      {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                    </select>
+                    <div className="input-group mb-2">
+                      <select className="form-select form-select-sm" {...register('vendor_id')} disabled={isAddingVendorInline}>
+                        <option value="">Select Vendor</option>
+                        {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                      </select>
+                      <button
+                        type="button"
+                        className={`btn btn-sm d-flex align-items-center ${isAddingVendorInline ? 'btn-secondary' : 'btn-outline-primary'}`}
+                        onClick={() => {
+                          const nextVal = !isAddingVendorInline;
+                          setIsAddingVendorInline(nextVal);
+                          if (!nextVal) {
+                            resetVendor();
+                            setShowAllDetails(false);
+                          }
+                        }}
+                        title={isAddingVendorInline ? "Cancel Quick Add" : "Quick Add Vendor"}
+                      >
+                        {isAddingVendorInline ? <FiX /> : <FiPlus />}
+                      </button>
+                    </div>
+
+                    {isAddingVendorInline && (
+                      <div className="card border-primary border-opacity-25 bg-light-subtle p-3 rounded-3 mb-2 shadow-sm">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <span className="small fw-bold text-primary">New Vendor Details</span>
+                        </div>
+
+                        <div className="mb-2">
+                          <label className="form-label small fw-bold text-secondary mb-1">Vendor Name *</label>
+                          <input
+                            type="text"
+                            className={`form-control form-control-sm ${vendorErrors.name ? 'is-invalid' : ''}`}
+                            placeholder="Vendor Name"
+                            {...registerVendor('name', { required: true })}
+                          />
+                        </div>
+
+                        <div className="row g-2 mb-2">
+                          <div className="col-6">
+                            <label className="form-label small fw-bold text-secondary mb-1">Phone</label>
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              placeholder="Phone"
+                              {...registerVendor('phone')}
+                            />
+                          </div>
+                          <div className="col-6">
+                            <label className="form-label small fw-bold text-secondary mb-1">Email</label>
+                            <input
+                              type="email"
+                              className="form-control form-control-sm"
+                              placeholder="Email"
+                              {...registerVendor('email')}
+                            />
+                          </div>
+                        </div>
+
+                        {showAllDetails ? (
+                          <>
+                            <div className="row g-2 mb-2">
+                              <div className="col-6">
+                                <label className="form-label small fw-bold text-secondary mb-1">Group</label>
+                                <select className="form-select form-select-sm" {...registerVendor('vendor_group', { required: true })}>
+                                  <option value="Supplier">Supplier</option>
+                                  <option value="Manufacturer">Manufacturer</option>
+                                  <option value="Distributor">Distributor</option>
+                                </select>
+                              </div>
+                              <div className="col-6">
+                                <label className="form-label small fw-bold text-secondary mb-1">Category</label>
+                                <select className="form-select form-select-sm" {...registerVendor('vendor_category', { required: true })}>
+                                  <option value="Local">Local</option>
+                                  <option value="Medium">Medium</option>
+                                  <option value="Global">Global</option>
+                                  <option value="Small">Small</option>
+                                  <option value="Large">Large</option>
+                                  <option value="Specialty">Specialty</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="mb-2">
+                              <label className="form-label small fw-bold text-secondary mb-1">Full Address</label>
+                              <textarea
+                                className="form-control form-control-sm"
+                                rows={2}
+                                placeholder="Address"
+                                {...registerVendor('address')}
+                              />
+                            </div>
+
+                            <div className="mb-2">
+                              <label className="form-label small fw-bold text-secondary mb-1">Landmark / Street</label>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Landmark"
+                                {...registerVendor('landmark')}
+                              />
+                            </div>
+                          </>
+                        ) : null}
+
+                        <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                          <button
+                            type="button"
+                            className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-secondary"
+                            onClick={() => setShowAllDetails(!showAllDetails)}
+                            style={{ fontSize: '0.75rem' }}
+                          >
+                            {showAllDetails ? '[-] Hide Details' : '[+] More Details'}
+                          </button>
+
+                          <div className="d-flex gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm py-1 px-2 fw-bold"
+                              style={{ fontSize: '0.75rem' }}
+                              onClick={() => {
+                                setIsAddingVendorInline(false);
+                                resetVendor();
+                                setShowAllDetails(false);
+                              }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm py-1 px-2 fw-bold"
+                              style={{ fontSize: '0.75rem' }}
+                              onClick={handleVendorSubmit(handleQuickVendorSubmit)}
+                            >
+                              Save Vendor
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-4">
@@ -386,7 +564,7 @@ export default function InventoryPage() {
                     <textarea className="form-control" rows="2" {...register('note')}></textarea>
                   </div>
 
-                  <div className="d-grid mt-4">
+                  <div className="mt-4 text-center">
                     <button type="submit" className="btn btn-primary py-2 fw-bold rounded-pill">
                       Apply Adjustment
                     </button>
@@ -399,7 +577,7 @@ export default function InventoryPage() {
       )}
       {/* Activity Summary Modal */}
       {showActivityModal && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999}}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999 }}>
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content border-0 rounded-3 shadow-lg">
               <div className="modal-header border-bottom bg-light px-4 py-3">
@@ -425,7 +603,7 @@ export default function InventoryPage() {
                     <tbody>
                       {ledger.length > 0 ? ledger.map((entry) => (
                         <tr key={entry.id}>
-                          <td className="px-4 text-secondary" style={{fontSize: '0.75rem'}}>
+                          <td className="px-4 text-secondary" style={{ fontSize: '0.75rem' }}>
                             {new Date(entry.created_at).toLocaleDateString()}
                           </td>
                           <td className="fw-semibold py-3">{entry.product?.name}</td>
@@ -463,7 +641,7 @@ export default function InventoryPage() {
 
       {/* Relocate Stock Modal */}
       {showRelocateModal && selectedItemForRelocate && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999}}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content border-0 rounded-3 shadow-lg">
               <div className="modal-header border-bottom bg-light px-4 py-3">
@@ -494,7 +672,7 @@ export default function InventoryPage() {
                       <label className="form-label small fw-bold text-secondary">Source Slot</label>
                       <input type="text" className="form-control" placeholder="Slot" {...register('from_slot')} />
                     </div>
-                    
+
                     <div className="col-12 py-1 text-center">
                       <div className="badge bg-primary rounded-pill"><FiArrowDown /> Move To <FiArrowDown /></div>
                     </div>
@@ -526,6 +704,8 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+
+
       <style>{`
         .premium-card {
           transition: all 0.3s ease;

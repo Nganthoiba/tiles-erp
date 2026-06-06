@@ -14,13 +14,13 @@ export default function ProductCreate() {
       is_active: true
     }
   });
-  
+
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(false);
   const [conversions, setConversions] = useState([]);
-  
+
   const selectedCategoryId = watch('category_id');
   const selectedBaseUnitId = watch('base_unit_id');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -70,12 +70,12 @@ export default function ProductCreate() {
         selectedCategory.spec_attributes.forEach(attr => {
           let val = data[`spec_${attr.id}`];
           const unit = specUnits[attr.id] || 'mm';
-          
+
           // Apply conversion for dimensions
           if (['len_mm', 'wid_mm', 'thk_mm', 'hgt_mm'].includes(attr.system_slug)) {
             val = convertToMm(val, unit);
           }
-          
+
           if (val) specs[attr.id] = val;
         });
       }
@@ -90,7 +90,7 @@ export default function ProductCreate() {
       };
 
       await api.post('/api/products', payload);
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Product Created',
@@ -129,14 +129,14 @@ export default function ProductCreate() {
               <div className="row g-4">
                 {/* Basic Info Block */}
                 <div className="col-12">
-                  <h6 className="mb-3 text-primary text-uppercase fw-bold ls-wide" style={{fontSize: '0.75rem'}}>Basic Information</h6>
+                  <h6 className="mb-3 text-primary text-uppercase fw-bold ls-wide" style={{ fontSize: '0.75rem' }}>Basic Information</h6>
                   <hr className="mt-0 mb-4 opacity-10" />
                 </div>
 
                 <div className="col-md-6">
                   <label className="form-label small fw-bold text-secondary">Product Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className={`form-control ${errors.name ? 'is-invalid' : ''}`}
                     placeholder="e.g. Kajaria Glazed Ceramic Tiles"
                     {...register('name', { required: 'Name is required' })}
@@ -146,8 +146,8 @@ export default function ProductCreate() {
 
                 <div className="col-md-3">
                   <label className="form-label small fw-bold text-secondary">SKU / Item Code</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className={`form-control ${errors.sku ? 'is-invalid' : ''}`}
                     placeholder="e.g. T-KAJ-6060"
                     {...register('sku', { required: 'SKU is required' })}
@@ -156,8 +156,8 @@ export default function ProductCreate() {
 
                 <div className="col-md-3">
                   <label className="form-label small fw-bold text-secondary">Barcode</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className="form-control"
                     placeholder="Scan or enter barcode"
                     {...register('barcode')}
@@ -171,7 +171,7 @@ export default function ProductCreate() {
                       + Add New
                     </button>
                   </div>
-                  <select 
+                  <select
                     className={`form-select ${errors.category_id ? 'is-invalid' : ''}`}
                     {...register('category_id', { required: 'Category is required' })}
                   >
@@ -199,46 +199,46 @@ export default function ProductCreate() {
                     <div className="bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-3 p-3">
                       <div className="row align-items-center">
                         <div className="col-md-6 border-end border-primary border-opacity-10">
-                          <span className="small text-primary fw-bold text-uppercase ls-wide d-block mb-2" style={{fontSize: '0.65rem'}}>Calculated Area (per Piece)</span>
+                          <span className="small text-primary fw-bold text-uppercase ls-wide d-block mb-2" style={{ fontSize: '0.65rem' }}>Calculated Area (per Piece)</span>
                           <div className="d-flex gap-4">
                             <div>
-                                <span className="h4 fw-bold text-dark mb-0 d-block">
-                                    {(
-                                      convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') * 
-                                      convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') / 1000000
-                                    ).toFixed(4)}
-                                </span>
-                                <span className="smaller text-secondary">Square Meters (Sqm)</span>
+                              <span className="h4 fw-bold text-dark mb-0 d-block">
+                                {(
+                                  convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') *
+                                  convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') / 1000000
+                                ).toFixed(4)}
+                              </span>
+                              <span className="smaller text-secondary">Square Meters (Sqm)</span>
                             </div>
                             <div>
-                                <span className="h4 fw-bold text-dark mb-0 d-block">
-                                    {(
-                                      convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') * 
-                                      convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') / 92903.04
-                                    ).toFixed(4)}
-                                </span>
-                                <span className="smaller text-secondary">Square Feet (Sqft)</span>
+                              <span className="h4 fw-bold text-dark mb-0 d-block">
+                                {(
+                                  convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') *
+                                  convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') / 92903.04
+                                ).toFixed(4)}
+                              </span>
+                              <span className="smaller text-secondary">Square Feet (Sqft)</span>
                             </div>
                           </div>
                         </div>
                         <div className="col-md-6 ps-md-4">
-                          <span className="small text-primary fw-bold text-uppercase ls-wide d-block mb-2" style={{fontSize: '0.65rem'}}>Packaging Impact</span>
+                          <span className="small text-primary fw-bold text-uppercase ls-wide d-block mb-2" style={{ fontSize: '0.65rem' }}>Packaging Impact</span>
                           <div className="d-flex gap-4">
                             <div>
-                                <span className="h4 fw-bold text-dark mb-0 d-block">
-                                    {(
-                                      convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') * 
-                                      convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') * 
-                                      (watch('spec_5') || 1) / 1000000
-                                    ).toFixed(4)}
-                                </span>
-                                <span className="smaller text-secondary">Sqm per Box</span>
+                              <span className="h4 fw-bold text-dark mb-0 d-block">
+                                {(
+                                  convertToMm(watch('spec_1') || 0, specUnits[1] || 'mm') *
+                                  convertToMm(watch('spec_2') || 0, specUnits[2] || 'mm') *
+                                  (watch('spec_5') || 1) / 1000000
+                                ).toFixed(4)}
+                              </span>
+                              <span className="smaller text-secondary">Sqm per Box</span>
                             </div>
                             <div>
-                                <span className="h4 fw-bold text-dark mb-0 d-block">
-                                    {watch('spec_5') || 1}
-                                </span>
-                                <span className="smaller text-secondary">Pieces per Box</span>
+                              <span className="h4 fw-bold text-dark mb-0 d-block">
+                                {watch('spec_5') || 1}
+                              </span>
+                              <span className="smaller text-secondary">Pieces per Box</span>
                             </div>
                           </div>
                         </div>
@@ -249,13 +249,13 @@ export default function ProductCreate() {
 
                 {/* Pricing Block */}
                 <div className="col-12 mt-5">
-                  <h6 className="mb-3 text-primary text-uppercase fw-bold ls-wide" style={{fontSize: '0.75rem'}}>Pricing & Units</h6>
+                  <h6 className="mb-3 text-primary text-uppercase fw-bold ls-wide" style={{ fontSize: '0.75rem' }}>Pricing & Units</h6>
                   <hr className="mt-0 mb-4 opacity-10" />
                 </div>
 
                 <div className="col-md-3">
                   <label className="form-label small fw-bold text-secondary">Base Unit</label>
-                  <select 
+                  <select
                     className={`form-select ${errors.base_unit_id ? 'is-invalid' : ''}`}
                     {...register('base_unit_id', { required: 'Base unit is required' })}
                   >
@@ -292,7 +292,7 @@ export default function ProductCreate() {
                 {/* Dynamic Specifications */}
                 {selectedCategory && selectedCategory.spec_attributes && selectedCategory.spec_attributes.length > 0 && (
                   <div className="col-12 mt-5">
-                    <h6 className="mb-3 text-primary text-uppercase fw-bold ls-wide" style={{fontSize: '0.75rem'}}>
+                    <h6 className="mb-3 text-primary text-uppercase fw-bold ls-wide" style={{ fontSize: '0.75rem' }}>
                       Technical Specifications ({selectedCategory.name})
                     </h6>
                     <hr className="mt-0 mb-4 opacity-10" />
@@ -307,19 +307,19 @@ export default function ProductCreate() {
                               {attr.name} {attr.pivot.is_required && <span className="text-danger">*</span>}
                             </label>
                             <div className={['len_mm', 'wid_mm', 'thk_mm', 'hgt_mm'].includes(attr.system_slug) ? 'input-group' : ''}>
-                              <input 
+                              <input
                                 type={attr.data_type === 'number' ? 'number' : 'text'}
                                 step="any"
                                 className="form-control"
-                                placeholder={attr.name}
+                                // placeholder={attr.name}
                                 {...register(`spec_${attr.id}`, { required: attr.pivot.is_required && !isHidden })}
                               />
                               {['len_mm', 'wid_mm', 'thk_mm', 'hgt_mm'].includes(attr.system_slug) && (
-                                <select 
-                                  className="form-select border-start-0" 
+                                <select
+                                  className="form-select border-start-0"
                                   style={{ maxWidth: '80px' }}
                                   value={specUnits[attr.id] || 'mm'}
-                                  onChange={(e) => setSpecUnits({...specUnits, [attr.id]: e.target.value})}
+                                  onChange={(e) => setSpecUnits({ ...specUnits, [attr.id]: e.target.value })}
                                 >
                                   <option value="mm">mm</option>
                                   <option value="cm">cm</option>
@@ -347,8 +347,8 @@ export default function ProductCreate() {
       </div>
 
       {showCategoryModal && (
-        <QuickAddModal 
-          type="category" 
+        <QuickAddModal
+          type="category"
           onAdded={(newCat) => {
             setCategories([...categories, newCat]);
             setValue('category_id', newCat.id);
@@ -358,8 +358,8 @@ export default function ProductCreate() {
       )}
 
       {showBrandModal && (
-        <QuickAddModal 
-          type="brand" 
+        <QuickAddModal
+          type="brand"
           onAdded={(newBrand) => {
             setBrands([...brands, newBrand]);
             setValue('brand_id', newBrand.id);

@@ -99,7 +99,7 @@ export default function VendorsPage() {
                 <tbody>
                   {loading ? (
                     <tr><td colSpan="5" className="text-center py-5">Loading...</td></tr>
-                  ) : vendors.map(vendor => (
+                  ) : vendors.length > 0 ? vendors.map(vendor => (
                     <tr key={vendor.id} className={!vendor.is_active ? 'opacity-50' : ''}>
                       <td className="px-4">
                         <div className="fw-bold">{vendor.name}</div>
@@ -107,15 +107,15 @@ export default function VendorsPage() {
                       </td>
                       <td>
                         <span className="badge bg-light text-dark border px-2 py-1 me-1">{vendor.vendor_group}</span>
-                        <span className="badge bg-primary-subtle text-primary border-primary-subtle border px-2 py-1" style={{fontSize: '0.65rem'}}>{vendor.vendor_category}</span>
+                        <span className="badge bg-primary-subtle text-primary border-primary-subtle border px-2 py-1" style={{ fontSize: '0.65rem' }}>{vendor.vendor_category}</span>
                       </td>
                       <td>
                         <div className="smaller">{vendor.phone}</div>
-                        <div className="text-muted" style={{fontSize: '0.7rem'}}>{vendor.email}</div>
+                        <div className="text-muted" style={{ fontSize: '0.7rem' }}>{vendor.email}</div>
                       </td>
                       <td>
-                        {vendor.is_active ? 
-                          <span className="text-success smaller d-flex align-items-center gap-1"><FiCheck /> Active</span> : 
+                        {vendor.is_active ?
+                          <span className="text-success smaller d-flex align-items-center gap-1"><FiCheck /> Active</span> :
                           <span className="text-danger smaller d-flex align-items-center gap-1"><FiX /> Inactive</span>
                         }
                       </td>
@@ -126,7 +126,19 @@ export default function VendorsPage() {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan="5" className="text-center py-5">
+                        <div className="text-center py-5 text-secondary">
+                          <div className="mb-3" style={{ fontSize: '5rem', opacity: '0.1' }}>
+                            <FiUsers />
+                          </div>
+                          <p className="h6 fw-bold">No Vendors Found</p>
+                          <p className="small">Get started by adding your first vendor or supplier</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -136,7 +148,7 @@ export default function VendorsPage() {
 
       {/* Vendor Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999}}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content border-0 rounded-3 shadow-lg">
               <div className="modal-header border-bottom bg-light px-4 py-3">

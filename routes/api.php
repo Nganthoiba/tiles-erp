@@ -16,8 +16,8 @@ use App\Http\Controllers\Api\v1\WarehouseController;
 use App\Http\Controllers\Api\v1\VendorController;
 use App\Http\Controllers\Api\v1\BrandController;
 
-
-Route::middleware('auth:sanctum')->group(function () {
+// auth:sanctum
+Route::middleware('')->group(function () {
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());
     });

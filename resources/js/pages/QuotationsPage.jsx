@@ -60,7 +60,7 @@ export default function QuotationsPage() {
       <div className="container-fluid py-3 px-md-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h4 className="fw-bold mb-0 text-dark">Sales Quotationsss</h4>
+            <h4 className="fw-bold mb-0 text-dark">Sales Quotation</h4>
             <p className="text-secondary small mb-0">Manage and track your sales offers</p>
           </div>
           <Link to="/quotations/create" className="btn btn-primary d-flex align-items-center gap-2 px-3 btn-sm fw-semibold shadow-sm">
@@ -74,20 +74,20 @@ export default function QuotationsPage() {
               <div className="col-md-5">
                 <div className="input-group input-group-sm">
                   <span className="input-group-text bg-white border-end-0 text-secondary"><FiSearch /></span>
-                  <input 
-                    type="text" 
-                    className="form-control border-start-0 ps-0 shadow-none" 
-                    placeholder="Search by number or customer name..." 
+                  <input
+                    type="text"
+                    className="form-control border-start-0 ps-0 shadow-none"
+                    placeholder="Search by number or customer name..."
                     value={params.search}
-                    onChange={(e) => setParams({...params, search: e.target.value})}
+                    onChange={(e) => setParams({ ...params, search: e.target.value })}
                   />
                 </div>
               </div>
               <div className="col-md-3">
-                <select 
+                <select
                   className="form-select form-select-sm shadow-none"
                   value={params.status}
-                  onChange={(e) => setParams({...params, status: e.target.value, page: 1})}
+                  onChange={(e) => setParams({ ...params, status: e.target.value, page: 1 })}
                 >
                   <option value="">All Statuses</option>
                   <option value="draft">Draft</option>
@@ -137,7 +137,7 @@ export default function QuotationsPage() {
                       <td className="text-center">{getStatusBadge(quo.status)}</td>
                       <td>
                         <div className="smaller">
-                          {quo.valid_until ? new Date(quo.valid_until).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'}) : 'N/A'}
+                          {quo.valid_until ? new Date(quo.valid_until).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
                         </div>
                       </td>
                       <td className="text-end px-4">
@@ -151,21 +151,21 @@ export default function QuotationsPage() {
                 </tbody>
               </table>
             </div>
-            
+
             {pagination.last_page > 1 && (
               <div className="p-3 border-top d-flex justify-content-end">
                 <nav>
                   <ul className="pagination pagination-sm mb-0">
                     <li className={`page-item ${params.page === 1 ? 'disabled' : ''}`}>
-                      <button className="page-link" onClick={() => setParams({...params, page: params.page - 1})}>Previous</button>
+                      <button className="page-link" onClick={() => setParams({ ...params, page: params.page - 1 })}>Previous</button>
                     </li>
                     {[...Array(pagination.last_page)].map((_, i) => (
                       <li key={i} className={`page-item ${params.page === i + 1 ? 'active' : ''}`}>
-                        <button className="page-link" onClick={() => setParams({...params, page: i + 1})}>{i + 1}</button>
+                        <button className="page-link" onClick={() => setParams({ ...params, page: i + 1 })}>{i + 1}</button>
                       </li>
                     ))}
                     <li className={`page-item ${params.page === pagination.last_page ? 'disabled' : ''}`}>
-                      <button className="page-link" onClick={() => setParams({...params, page: params.page + 1})}>Next</button>
+                      <button className="page-link" onClick={() => setParams({ ...params, page: params.page + 1 })}>Next</button>
                     </li>
                   </ul>
                 </nav>

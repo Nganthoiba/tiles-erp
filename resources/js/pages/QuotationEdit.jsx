@@ -62,7 +62,7 @@ export default function QuotationEdit() {
         api.get('/api/units'),
         api.get(`/api/quotations/${id}`)
       ]);
-      
+
       setCustomers(custRes.data.data || custRes.data);
       setDealers(dealerRes.data.data || dealerRes.data);
       setProducts(prodRes.data.data || prodRes.data);
@@ -167,16 +167,16 @@ export default function QuotationEdit() {
     try {
       const response = await api.post('/api/customers', newCustomer);
       Swal.fire('Success', 'Customer created successfully', 'success');
-      
+
       const custRes = await api.get('/api/customers');
       setCustomers(custRes.data.data || custRes.data);
-      
+
       setFormData({
-        ...formData, 
+        ...formData,
         contact_type: 'App\\Models\\Customer',
         contact_id: response.data.id
       });
-      
+
       setShowCustomerModal(false);
       setNewCustomer({ name: '', email: '', phone: '', address: '', is_active: true });
     } catch (err) {
@@ -186,10 +186,10 @@ export default function QuotationEdit() {
     }
   };
 
-  const handleQuickDealerSubmit = async(e) => {
+  const handleQuickDealerSubmit = async (e) => {
     e.preventDefault();
     setSavingDealer(true);
-    try{
+    try {
       const response = await api.post('/api/dealers', newDealer);
       Swal.fire('Success', 'Dealer created successfully', 'success');
 
@@ -198,8 +198,8 @@ export default function QuotationEdit() {
       setDealers(updatedDealers);
 
       setFormData({
-        ...formData, 
-        contact_type: 'App\\Models\\Dealer',
+        ...formData,
+        contact_type: "App\Models\Dealer",
         contact_id: response.data.id
       });
 
@@ -270,34 +270,34 @@ export default function QuotationEdit() {
             <div className="col-lg-8">
               <div className="card border-0 shadow-sm rounded-3 mb-4">
                 <div className="card-body p-4">
-                  <h6 className="fw-bold text-uppercase mb-4 text-primary ls-wide" style={{fontSize: '0.75rem'}}>Header Information</h6>
+                  <h6 className="fw-bold text-uppercase mb-4 text-primary ls-wide" style={{ fontSize: '0.75rem' }}>Header Information</h6>
                   <div className="row g-3">
                     <div className="col-md-4">
                       <label className="form-label small fw-bold text-secondary">Contact Type</label>
-                      <select 
-                        className="form-select shadow-none" 
+                      <select
+                        className="form-select shadow-none"
                         value={formData.contact_type}
-                        onChange={(e) => setFormData({...formData, contact_type: e.target.value, contact_id: ''})}
+                        onChange={(e) => setFormData({ ...formData, contact_type: e.target.value, contact_id: '' })}
                       >
-                        <option value="App\\Models\\Customer">Customer (Individual)</option>
-                        <option value="App\\Models\\Dealer">Dealer (Business)</option>
+                        <option value="App\Models\Customer">Customer (Individual)</option>
+                        <option value="App\Models\Dealer">Dealer (Business)</option>
                       </select>
                     </div>
                     <div className="col-md-8">
                       <div className="d-flex justify-content-between align-items-end mb-2">
                         <label className="form-label small fw-bold text-secondary mb-0">Select {formData.contact_type.includes('Customer') ? 'Customer' : 'Dealer'}</label>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="btn btn-link btn-sm p-0 m-0 text-decoration-none d-flex align-items-center gap-1 fw-bold text-primary"
-                          onClick={() => formData.contact_type.includes('Customer')?setShowCustomerModal(true):setShowDealerModal(true)}
+                          onClick={() => formData.contact_type.includes('Customer') ? setShowCustomerModal(true) : setShowDealerModal(true)}
                         >
                           <FiUserPlus fontSize="0.9rem" /> Quick Add
                         </button>
                       </div>
-                      <select 
+                      <select
                         className="form-select shadow-none"
                         value={formData.contact_id}
-                        onChange={(e) => setFormData({...formData, contact_id: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, contact_id: e.target.value })}
                         required
                       >
                         <option value="">-- Select --</option>
@@ -308,11 +308,11 @@ export default function QuotationEdit() {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label small fw-bold text-secondary">Valid Until</label>
-                      <input 
-                        type="date" 
-                        className="form-control shadow-none" 
+                      <input
+                        type="date"
+                        className="form-control shadow-none"
                         value={formData.valid_until}
-                        onChange={(e) => setFormData({...formData, valid_until: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
                       />
                     </div>
                   </div>
@@ -322,7 +322,7 @@ export default function QuotationEdit() {
               <div className="card border-0 shadow-sm rounded-3">
                 <div className="card-body p-4">
                   <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h6 className="fw-bold text-uppercase mb-0 text-primary ls-wide" style={{fontSize: '0.75rem'}}>Quotation Items</h6>
+                    <h6 className="fw-bold text-uppercase mb-0 text-primary ls-wide" style={{ fontSize: '0.75rem' }}>Quotation Items</h6>
                     <button type="button" onClick={addItemRow} className="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-none fw-semibold">
                       <FiPlus className="me-1" /> Add Row
                     </button>
@@ -332,12 +332,12 @@ export default function QuotationEdit() {
                     <table className="table table-borderless align-middle">
                       <thead>
                         <tr className="text-secondary small fw-bold border-bottom">
-                          <th style={{minWidth: '200px'}}>Product</th>
-                          <th style={{width: '100px'}}>Quantity</th>
-                          <th style={{width: '120px'}}>Unit Price (₹)</th>
-                          <th style={{width: '100px'}}>Discount (₹)</th>
+                          <th style={{ minWidth: '200px' }}>Product</th>
+                          <th style={{ width: '100px' }}>Quantity</th>
+                          <th style={{ width: '120px' }}>Unit Price (₹)</th>
+                          <th style={{ width: '100px' }}>Discount (₹)</th>
                           <th className="text-end">Total (₹)</th>
-                          <th style={{width: '50px'}}></th>
+                          <th style={{ width: '50px' }}></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -356,9 +356,9 @@ export default function QuotationEdit() {
                               />
                             </td>
                             <td>
-                              <input 
-                                type="number" 
-                                className="form-control form-control-sm shadow-none bg-light border-0" 
+                              <input
+                                type="number"
+                                className="form-control form-control-sm shadow-none bg-light border-0"
                                 value={item.quantity}
                                 onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
                                 min="0.0001"
@@ -369,9 +369,9 @@ export default function QuotationEdit() {
                             <td>
                               <div className="small">
                                 {/* input-group input-group-sm <span className="input-group-text bg-light border-0">₹</span> */}
-                                <input 
-                                  type="number" 
-                                  className="form-control form-control-sm shadow-none bg-light border-0" 
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm shadow-none bg-light border-0"
                                   value={item.unit_price}
                                   onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)}
                                   step="any"
@@ -380,16 +380,16 @@ export default function QuotationEdit() {
                               </div>
                             </td>
                             <td>
-                              <input 
-                                type="number" 
-                                className="form-control form-control-sm shadow-none bg-light border-0" 
+                              <input
+                                type="number"
+                                className="form-control form-control-sm shadow-none bg-light border-0"
                                 value={item.discount}
                                 onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
                                 step="any"
                               />
                             </td>
                             <td className="text-end fw-bold text-dark small">
-                              {(item.quantity * item.unit_price - (item.discount || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                              {(item.quantity * item.unit_price - (item.discount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </td>
                             <td>
                               <button type="button" onClick={() => removeItemRow(index)} className="btn btn-link text-danger p-0 shadow-none">
@@ -408,35 +408,35 @@ export default function QuotationEdit() {
             <div className="col-lg-4">
               <div className="card border-0 shadow-sm rounded-3 mb-4 bg-light">
                 <div className="card-body p-4">
-                  <h6 className="fw-bold text-uppercase mb-4 text-dark ls-wide" style={{fontSize: '0.75rem'}}>Summary</h6>
+                  <h6 className="fw-bold text-uppercase mb-4 text-dark ls-wide" style={{ fontSize: '0.75rem' }}>Summary</h6>
                   <div className="d-flex justify-content-between mb-3 text-secondary small">
                     <span>Subtotal</span>
-                    <span className="fw-bold text-dark">₹{formData.subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    <span className="fw-bold text-dark">₹{formData.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-3 text-secondary small">
                     <span>Total Discount</span>
-                    <span className="fw-bold text-danger">- ₹{formData.discount_total.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    <span className="fw-bold text-danger">- ₹{formData.discount_total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-4 border-bottom pb-2">
                     <span className="text-secondary small">Taxes (Estimated)</span>
-                    <span className="fw-bold text-dark">₹{formData.tax_total.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    <span className="fw-bold text-dark">₹{formData.tax_total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="d-flex justify-content-between align-items-center">
                     <span className="h5 fw-bold text-dark mb-0">Grand Total</span>
-                    <span className="h4 fw-bold text-primary mb-0">₹{formData.grand_total.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    <span className="h4 fw-bold text-primary mb-0">₹{formData.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>
 
               <div className="card border-0 shadow-sm rounded-3 mb-4">
                 <div className="card-body p-4">
-                    <label className="form-label small fw-bold text-secondary">Internal Notes / Terms</label>
-                    <textarea 
-                        className="form-control shadow-none" 
-                        rows="4" 
-                        value={formData.notes}
-                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                    ></textarea>
+                  <label className="form-label small fw-bold text-secondary">Internal Notes / Terms</label>
+                  <textarea
+                    className="form-control shadow-none"
+                    rows="4"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  ></textarea>
                 </div>
               </div>
 
@@ -450,7 +450,7 @@ export default function QuotationEdit() {
 
         {/* Quick Customer Modal */}
         {showCustomerModal && (
-          <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+          <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content border-0 shadow-lg rounded-4">
                 <div className="modal-header border-0 pb-0">
@@ -461,40 +461,40 @@ export default function QuotationEdit() {
                   <div className="modal-body p-4">
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-secondary">Customer Name</label>
-                      <input 
-                        type="text" 
-                        className="form-control shadow-none" 
+                      <input
+                        type="text"
+                        className="form-control shadow-none"
                         value={newCustomer.name}
-                        onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
-                        required 
+                        onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                        required
                       />
                     </div>
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-secondary">Phone Number</label>
-                      <input 
-                        type="text" 
-                        className="form-control shadow-none" 
+                      <input
+                        type="text"
+                        className="form-control shadow-none"
                         value={newCustomer.phone}
-                        onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
-                        required 
+                        onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                        required
                       />
                     </div>
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-secondary">Email (Optional)</label>
-                      <input 
-                        type="email" 
-                        className="form-control shadow-none" 
+                      <input
+                        type="email"
+                        className="form-control shadow-none"
                         value={newCustomer.email}
-                        onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
                       />
                     </div>
                     <div className="mb-0">
                       <label className="form-label small fw-bold text-secondary">Address</label>
-                      <textarea 
-                        className="form-control shadow-none" 
+                      <textarea
+                        className="form-control shadow-none"
                         rows="2"
                         value={newCustomer.address}
-                        onChange={(e) => setNewCustomer({...newCustomer, address: e.target.value})}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
                       ></textarea>
                     </div>
                   </div>
@@ -513,7 +513,7 @@ export default function QuotationEdit() {
 
         {/* Quick Dealer Modal */}
         {showDealerModal && (
-          <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+          <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content border-0 shadow-lg rounded-4">
                 <div className="modal-header border-0 pb-0">
@@ -524,48 +524,48 @@ export default function QuotationEdit() {
                   <div className="modal-body p-4">
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-secondary">Dealer Name</label>
-                      <input 
-                        type="text" 
-                        className="form-control shadow-none" 
+                      <input
+                        type="text"
+                        className="form-control shadow-none"
                         value={newDealer.name}
-                        onChange={(e) => setNewDealer({...newDealer, name: e.target.value})}
-                        required 
+                        onChange={(e) => setNewDealer({ ...newDealer, name: e.target.value })}
+                        required
                       />
                     </div>
                     <div className="mb-3">
                       <label className='form-label small fw-bold text-secondary'>Company Name</label>
-                      <input type="text" 
-                        className="form-control shadow-none" 
-                        value={newDealer.company_name} 
-                        onChange={(e) => setNewDealer({...newDealer, company_name: e.target.value})} 
+                      <input type="text"
+                        className="form-control shadow-none"
+                        value={newDealer.company_name}
+                        onChange={(e) => setNewDealer({ ...newDealer, company_name: e.target.value })}
                       />
                     </div>
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-secondary">Phone Number</label>
-                      <input 
-                        type="text" 
-                        className="form-control shadow-none" 
+                      <input
+                        type="text"
+                        className="form-control shadow-none"
                         value={newDealer.phone}
-                        onChange={(e) => setNewDealer({...newDealer, phone: e.target.value})}
-                        required 
+                        onChange={(e) => setNewDealer({ ...newDealer, phone: e.target.value })}
+                        required
                       />
                     </div>
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-secondary">Email (Optional)</label>
-                      <input 
-                        type="email" 
-                        className="form-control shadow-none" 
+                      <input
+                        type="email"
+                        className="form-control shadow-none"
                         value={newDealer.email}
-                        onChange={(e) => setNewDealer({...newDealer, email: e.target.value})}
+                        onChange={(e) => setNewDealer({ ...newDealer, email: e.target.value })}
                       />
                     </div>
                     <div className="mb-0">
                       <label className="form-label small fw-bold text-secondary">Address</label>
-                      <textarea 
-                        className="form-control shadow-none" 
+                      <textarea
+                        className="form-control shadow-none"
                         rows="2"
                         value={newDealer.address}
-                        onChange={(e) => setNewDealer({...newDealer, address: e.target.value})}
+                        onChange={(e) => setNewDealer({ ...newDealer, address: e.target.value })}
                       ></textarea>
                     </div>
                   </div>
