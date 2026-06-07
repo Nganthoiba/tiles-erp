@@ -271,7 +271,7 @@ export default function InventoryPage() {
                               <code>{item.sku}</code>
                               {item.locations?.length > 0 && (
                                 <span className="text-dark opacity-75">
-                                  • {item.locations.map(loc => `${loc.rack}/${loc.slot}`).join(', ')}
+                                  <strong>Location:</strong> {item.locations.map(loc => `${loc.rack}/${loc.slot}`).join(', ')}
                                 </span>
                               )}
                             </div>

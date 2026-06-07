@@ -10,7 +10,7 @@ export default function LandingPage() {
         <div className="container">
           <Link className="navbar-brand d-flex align-items-center gap-2 fw-bold text-primary" to="/">
             <img src="/icons/icon-192x192.png" alt="Logo" width="40" height="40" className="rounded shadow-sm" />
-            <span className="fs-4">CeramaFlow ERP</span>
+            <span className="fs-4">New Life Tiles & Sanitary World</span>
           </Link>
           <div className="ms-auto flex-row d-flex">
             <Link to="/login" className="btn btn-outline-primary px-4 fw-medium rounded-pill me-2">Log In</Link>
@@ -41,16 +41,16 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Dashboard Mockup Preview */}
             <div className="row justify-content-center mt-5 pt-3">
               <div className="col-11 col-lg-10">
                 <div className="bg-light rounded-4 shadow-lg p-2 border border-light-subtle">
                   <div className="bg-white rounded-3 shadow-sm overflow-hidden d-flex flex-column align-items-center justify-content-center" style={{ height: '400px', backgroundImage: 'linear-gradient(to bottom right, #f8fafc, #eff6ff)' }}>
                     <div className="text-center text-secondary opacity-50">
-                        <img src="/icons/icon-512x512.png" width="100" className="mb-3 grayscale" style={{ filter: 'grayscale(100%) opacity(0.5)' }} alt="tiles" />
-                        <h4 className="fw-bold">Intelligent Dashboard Awaits</h4>
-                        <p>Sign in to view your real-time analytics.</p>
+                      <img src="/icons/icon-512x512.png" width="100" className="mb-3 grayscale" style={{ filter: 'grayscale(100%) opacity(0.5)' }} alt="tiles" />
+                      <h4 className="fw-bold">Intelligent Dashboard Awaits</h4>
+                      <p>Sign in to view your real-time analytics.</p>
                     </div>
                   </div>
                 </div>
@@ -113,9 +113,9 @@ export default function LandingPage() {
         <div className="container d-flex flex-column flex-md-row justify-content-between align-items-center">
           <div className="d-flex align-items-center gap-2 mb-3 mb-md-0">
             <img src="/icons/icon-192x192.png" alt="Logo" width="30" height="30" className="rounded shadow-sm opacity-75" />
-            <span className="fw-bold">CeramaFlow ERP</span>
+            <span className="fw-bold">New Life Tiles & Sanitary World</span>
           </div>
-          <p className="mb-0 text-white-50 small">© {new Date().getFullYear()} CeramaFlow ERP. All rights reserved.</p>
+          <p className="mb-0 text-white-50 small">© {new Date().getFullYear()} New Life Tiles & Sanitary World. All rights reserved.</p>
         </div>
       </footer>
     </div>
