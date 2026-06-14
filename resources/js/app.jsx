@@ -20,6 +20,7 @@ import PaymentsPage from './pages/PaymentsPage';
 import ReportsPage from './pages/ReportsPage';
 import VendorsPage from './pages/VendorsPage';
 import StockLedgerPage from './pages/StockLedgerPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../css/app.css';
@@ -151,6 +152,14 @@ function App() {
             element={
               <ProtectedRoute requiredPermission="manage-products">
                 <VendorsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePasswordPage />
               </ProtectedRoute>
             }
           />

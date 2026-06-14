@@ -82,4 +82,29 @@ class AuthController extends Controller
             'user' => $user->load('roles.permissions'),
         ]);
     }
+
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The provided current password does not match our records.'],
+            ]);
+        }
+
+        $user->password = $validated['new_password'];
+        $user->save();
+
+        Log::info('Password changed successfully', ['user_id' => $user->id]);
+
+        return response()->json([
+            'message' => 'Password changed successfully',
+        ]);
+    }
 }

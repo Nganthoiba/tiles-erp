@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   FiHome, 
@@ -16,7 +16,8 @@ import {
   FiUsers,
   FiPackage,
   FiShoppingCart,
-  FiList
+  FiList,
+  FiLock
 } from 'react-icons/fi';
 
 export default function DashboardLayout({ children }) {
@@ -155,6 +156,14 @@ export default function DashboardLayout({ children }) {
                   <span className="text-secondary small">
                     {primaryRole.name}
                   </span>
+                </li>
+                <li>
+                  <Link 
+                    to="/change-password" 
+                    className="dropdown-item d-flex align-items-center gap-2 py-2 small text-dark"
+                  >
+                    <FiLock /> Change Password
+                  </Link>
                 </li>
                 <li>
                   <button 
