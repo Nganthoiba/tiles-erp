@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { fetchUser } = useAuth();
 
   const [form, setForm] = useState({
     name: '',
@@ -30,6 +32,7 @@ export default function RegisterPage() {
     try {
       await api.get('/sanctum/csrf-cookie');
       await api.post('/register', form);
+      await fetchUser();
       navigate('/dashboard');
     } catch (err) {
       if (err.response?.status === 422) {

@@ -57,4 +57,14 @@ class Product extends Model
     {
         return $this->hasMany(UnitConversion::class);
     }
+
+    public function slabs(): HasMany
+    {
+        return $this->hasMany(Slab::class);
+    }
+
+    public function isSlab(): bool
+    {
+        return $this->category && in_array(strtolower($this->category->slug), ['granite', 'marble']);
+    }
 }

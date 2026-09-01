@@ -94,16 +94,49 @@ class InvoiceService
                 $warehouseId = $additionalData['warehouse_id'] ?? 1; // Default to first warehouse
                 $warehouse = \App\Models\Warehouse::findOrFail($warehouseId);
 
-                $this->stockService->recordMovement(
-                    $item->product,
-                    $warehouse,
-                    $item->quantity,
-                    $item->unit_id,
-                    'subtraction',
-                    'sale',
-                    $invoice->id,
-                    "Sale Invoice #{$invoice->invoice_number}"
-                );
+                if ($item->product->isSlab()) {
+                    // Find slab IDs provided for this product in additionalData
+                    // e.g. additionalData['slabs_by_product'][product_id] = [slab_id_1, slab_id_2]
+                    $slabIds = $additionalData['slabs_by_product'][$item->product_id]
+                        ?? ($additionalData['slab_ids'] ?? []);
+
+                    $slabs = \App\Models\Slab::whereIn('id', $slabIds)
+                        ->where('product_id', $item->product_id)
+                        ->get();
+
+                    $totalAreaSqft = $slabs->sum('area_sqft');
+
+                    $sftUnit = \App\Models\ProductUnit::where('slug', 'sft')->first();
+                    $unitId = $sftUnit ? $sftUnit->id : $item->unit_id;
+
+                    $movement = $this->stockService->recordMovement(
+                        $item->product,
+                        $warehouse,
+                        $totalAreaSqft,
+                        $unitId,
+                        'subtraction',
+                        'sale',
+                        $invoice->id,
+                        "Sale Invoice #{$invoice->invoice_number} (Slabs Sold)"
+                    );
+
+                    \App\Models\Slab::whereIn('id', $slabs->pluck('id'))->update([
+                        'status' => 'sold',
+                        'sales_invoice_id' => $invoice->id,
+                        'stock_ledger_id' => $movement->id
+                    ]);
+                } else {
+                    $this->stockService->recordMovement(
+                        $item->product,
+                        $warehouse,
+                        $item->quantity,
+                        $item->unit_id,
+                        'subtraction',
+                        'sale',
+                        $invoice->id,
+                        "Sale Invoice #{$invoice->invoice_number}"
+                    );
+                }
             }
 
             $quotation->update(['status' => 'converted']);

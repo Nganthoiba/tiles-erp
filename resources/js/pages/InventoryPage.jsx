@@ -25,6 +25,12 @@ export default function InventoryPage() {
   const [isAddingVendorInline, setIsAddingVendorInline] = useState(false);
   const [showAllDetails, setShowAllDetails] = useState(false);
 
+  // Slab specific states
+  const [slabsList, setSlabsList] = useState([
+    { lot_number: '', slab_number: '', length: '', width: '', thickness: '', quantity: 1, unit: 'mm' }
+  ]);
+  const [selectedSlabIds, setSelectedSlabIds] = useState([]);
+
   const { register: registerVendor, handleSubmit: handleVendorSubmit, reset: resetVendor, formState: { errors: vendorErrors } } = useForm({
     defaultValues: {
       vendor_group: 'Supplier',
@@ -48,6 +54,7 @@ export default function InventoryPage() {
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm();
 
   const watchProductId = watch('product_id');
+  const watchAdjustmentType = watch('type') || 'addition';
 
   useEffect(() => {
     if (watchProductId) {
@@ -118,7 +125,22 @@ export default function InventoryPage() {
 
   const handleAdjustStock = async (data) => {
     try {
-      await api.post('/api/inventory/adjust', data);
+      const selectedProduct = products.find(p => p.id === parseInt(data.product_id));
+      const isSlabProduct = selectedProduct && (
+        selectedProduct.is_slab || 
+        (selectedProduct.category && ['granite', 'marble'].includes(selectedProduct.category.slug?.toLowerCase()))
+      );
+
+      const payload = { ...data };
+      if (isSlabProduct) {
+        if (watchAdjustmentType === 'addition') {
+          payload.slabs = slabsList;
+        } else {
+          payload.slab_ids = selectedSlabIds;
+        }
+      }
+
+      await api.post('/api/inventory/adjust', payload);
       Swal.fire({
         icon: 'success',
         title: 'Adjusted!',
@@ -128,6 +150,8 @@ export default function InventoryPage() {
       });
       setShowModal(false);
       reset();
+      setSlabsList([{ lot_number: '', slab_number: '', length: '', width: '', thickness: '', quantity: 1, unit: 'mm' }]);
+      setSelectedSlabIds([]);
       fetchInitialData();
     } catch (error) {
       console.error('Error adjusting stock:', error);
@@ -140,11 +164,15 @@ export default function InventoryPage() {
   };
   const handleRelocateStock = async (data) => {
     try {
-      await api.post('/api/inventory/relocate', {
+      const payload = {
         ...data,
         product_id: selectedItemForRelocate.id,
-        warehouse_id: warehouses[0]?.id // Assuming first warehouse for simplicity as per current design
-      });
+        warehouse_id: warehouses[0]?.id // Assuming first warehouse for simplicity
+      };
+      if (selectedItemForRelocate.is_slab) {
+        payload.slab_ids = selectedSlabIds;
+      }
+      await api.post('/api/inventory/relocate', payload);
       Swal.fire({
         icon: 'success',
         title: 'Relocated!',
@@ -154,6 +182,7 @@ export default function InventoryPage() {
       });
       setShowRelocateModal(false);
       reset();
+      setSelectedSlabIds([]);
       fetchStockLevels();
     } catch (error) {
       console.error('Error relocating stock:', error);
@@ -269,12 +298,24 @@ export default function InventoryPage() {
                             <div className="fw-semibold text-dark">{item.name}</div>
                             <div className="text-muted d-flex align-items-center gap-2" style={{ fontSize: '0.75rem' }}>
                               <code>{item.sku}</code>
-                              {item.locations?.length > 0 && (
+                            {item.locations?.length > 0 && (
                                 <span className="text-dark opacity-75">
                                   <strong>Location:</strong> {item.locations.map(loc => `${loc.rack}/${loc.slot}`).join(', ')}
                                 </span>
                               )}
                             </div>
+                            {item.is_slab && item.slabs && item.slabs.length > 0 && (
+                              <div className="mt-2 text-dark bg-light rounded p-2 border" style={{ fontSize: '0.75rem' }}>
+                                <strong className="d-block mb-1 text-secondary text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Active Slabs In Stock:</strong>
+                                <div className="d-flex flex-wrap gap-2">
+                                  {item.slabs.map((slab) => (
+                                    <span key={slab.id} className="badge bg-white text-dark border px-2 py-1 fw-normal">
+                                      Lot: <strong>{slab.lot_number || 'N/A'}</strong> | Slab #{slab.slab_number || 'N/A'} | {slab.length}x{slab.width}x{slab.thickness} mm ({parseFloat(slab.area_sqft).toFixed(2)} Sq Ft) | Count: {slab.quantity} | {slab.rack_number || 'R'}/{slab.slot_number || 'S'}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </td>
                           <td>
                             <span className="text-secondary">
@@ -288,7 +329,7 @@ export default function InventoryPage() {
                           </td>
                           <div className="d-flex align-items-center justify-content-end gap-3">
                             <button
-                              onClick={() => { setSelectedItemForRelocate(item); setShowRelocateModal(true); }}
+                              onClick={() => { setSelectedItemForRelocate(item); setSelectedSlabIds([]); setShowRelocateModal(true); }}
                               className="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-primary"
                               style={{ fontSize: '0.75rem' }}
                             >
@@ -382,37 +423,268 @@ export default function InventoryPage() {
                       />
                     </div>
 
-                    <div className="col-md-6">
-                      <label className="form-label small fw-bold text-secondary">Quantity</label>
-                      <div className="input-group">
-                        <input
-                          type="number" step="0.0001"
-                          className={`form-control ${errors.quantity ? 'is-invalid' : ''}`}
-                          {...register('quantity', { required: true, min: 1 })}
-                          placeholder="0"
-                        />
-                        <span className="input-group-text bg-light text-secondary small fw-semibold">
-                          {(() => {
-                            const prod = products.find(p => p.id === parseInt(watchProductId));
-                            if (!prod) return 'Unit';
-                            return units.find(u => u.id === prod.base_unit_id)?.name || 'Unit';
-                          })()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label small fw-bold text-secondary">Adjustment Type</label>
-                      <div className="d-flex gap-3 mt-1">
-                        <div className="form-check">
-                          <input className="form-check-input" type="radio" value="addition" {...register('type', { required: true })} defaultChecked />
-                          <label className="form-check-label small">Addition</label>
-                        </div>
-                        <div className="form-check">
-                          <input className="form-check-input" type="radio" value="subtraction" {...register('type', { required: true })} />
-                          <label className="form-check-label small">Subtraction</label>
-                        </div>
-                      </div>
-                    </div>
+                    {(() => {
+                      const selectedProduct = products.find(p => p.id === parseInt(watchProductId));
+                      const isSlabProduct = selectedProduct && (
+                        selectedProduct.is_slab || 
+                        (selectedProduct.category && ['granite', 'marble'].includes(selectedProduct.category.slug?.toLowerCase()))
+                      );
+
+                      return (
+                        <>
+                          <div className="col-md-6">
+                            <label className="form-label small fw-bold text-secondary">Adjustment Type</label>
+                            <div className="d-flex gap-3 mt-1">
+                              <div className="form-check">
+                                <input className="form-check-input" type="radio" value="addition" {...register('type', { required: true })} defaultChecked />
+                                <label className="form-check-label small">Addition</label>
+                              </div>
+                              <div className="form-check">
+                                <input className="form-check-input" type="radio" value="subtraction" {...register('type', { required: true })} />
+                                <label className="form-check-label small">Subtraction</label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {!isSlabProduct ? (
+                            <div className="col-md-6">
+                              <label className="form-label small fw-bold text-secondary">Quantity</label>
+                              <div className="input-group">
+                                <input
+                                  type="number" step="0.0001"
+                                  className={`form-control ${errors.quantity ? 'is-invalid' : ''}`}
+                                  {...register('quantity', { required: !isSlabProduct, min: 0.0001 })}
+                                  placeholder="0"
+                                />
+                                <span className="input-group-text bg-light text-secondary small fw-semibold">
+                                  {units.find(u => u.id === selectedProduct?.base_unit_id)?.name || 'Unit'}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            watchAdjustmentType === 'addition' ? (
+                              <div className="col-12 mt-2">
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                  <label className="form-label small fw-bold text-secondary mb-0">Incoming Slabs Entries (Length, Width & Thickness)</label>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm px-2 py-1 rounded"
+                                    style={{ fontSize: '0.75rem' }}
+                                    onClick={() => setSlabsList([...slabsList, { lot_number: '', slab_number: '', length: '', width: '', thickness: '', quantity: 1, unit: 'mm' }])}
+                                  >
+                                    + Add Slab Row
+                                  </button>
+                                </div>
+                                <div className="table-responsive border rounded-3 p-1 bg-white mb-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                  <table className="table table-sm table-borderless align-middle mb-0" style={{ fontSize: '0.8rem' }}>
+                                    <thead className="bg-light text-secondary border-bottom">
+                                      <tr>
+                                        <th>Lot No</th>
+                                        <th>Slab No</th>
+                                        <th style={{ width: '80px' }}>Length</th>
+                                        <th style={{ width: '80px' }}>Width</th>
+                                        <th style={{ width: '80px' }}>Thick</th>
+                                        <th style={{ width: '65px' }}>Unit</th>
+                                        <th style={{ width: '60px' }}>Slabs</th>
+                                        <th style={{ width: '30px' }}></th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {slabsList.map((slab, index) => (
+                                        <tr key={index} className="border-bottom border-light">
+                                          <td>
+                                            <input
+                                              type="text"
+                                              className="form-control form-control-sm"
+                                              placeholder="Lot"
+                                              value={slab.lot_number}
+                                              onChange={(e) => {
+                                                const newSlabs = [...slabsList];
+                                                newSlabs[index].lot_number = e.target.value;
+                                                setSlabsList(newSlabs);
+                                              }}
+                                            />
+                                          </td>
+                                          <td>
+                                            <input
+                                              type="text"
+                                              className="form-control form-control-sm"
+                                              placeholder="Slab"
+                                              value={slab.slab_number}
+                                              onChange={(e) => {
+                                                const newSlabs = [...slabsList];
+                                                newSlabs[index].slab_number = e.target.value;
+                                                setSlabsList(newSlabs);
+                                              }}
+                                            />
+                                          </td>
+                                          <td>
+                                            <input
+                                              type="number"
+                                              className="form-control form-control-sm"
+                                              placeholder="L"
+                                              value={slab.length}
+                                              onChange={(e) => {
+                                                const newSlabs = [...slabsList];
+                                                newSlabs[index].length = e.target.value;
+                                                setSlabsList(newSlabs);
+                                              }}
+                                              required
+                                            />
+                                          </td>
+                                          <td>
+                                            <input
+                                              type="number"
+                                              className="form-control form-control-sm"
+                                              placeholder="W"
+                                              value={slab.width}
+                                              onChange={(e) => {
+                                                const newSlabs = [...slabsList];
+                                                newSlabs[index].width = e.target.value;
+                                                setSlabsList(newSlabs);
+                                              }}
+                                              required
+                                            />
+                                          </td>
+                                          <td>
+                                            <input
+                                              type="number"
+                                              className="form-control form-control-sm"
+                                              placeholder="T"
+                                              value={slab.thickness}
+                                              onChange={(e) => {
+                                                const newSlabs = [...slabsList];
+                                                newSlabs[index].thickness = e.target.value;
+                                                setSlabsList(newSlabs);
+                                              }}
+                                              required
+                                            />
+                                          </td>
+                                          <td>
+                                            <select
+                                              className="form-select form-select-sm px-1 py-0"
+                                              value={slab.unit}
+                                              onChange={(e) => {
+                                                const newSlabs = [...slabsList];
+                                                newSlabs[index].unit = e.target.value;
+                                                setSlabsList(newSlabs);
+                                              }}
+                                            >
+                                              <option value="mm">mm</option>
+                                              <option value="cm">cm</option>
+                                              <option value="ft">ft</option>
+                                            </select>
+                                          </td>
+                                          <td>
+                                            <input
+                                              type="number"
+                                              className="form-control form-control-sm px-1"
+                                              value={slab.quantity}
+                                              onChange={(e) => {
+                                                const newSlabs = [...slabsList];
+                                                newSlabs[index].quantity = e.target.value;
+                                                setSlabsList(newSlabs);
+                                              }}
+                                              min="1"
+                                              required
+                                            />
+                                          </td>
+                                          <td className="text-center">
+                                            {slabsList.length > 1 && (
+                                              <button
+                                                type="button"
+                                                className="btn btn-link text-danger p-0 m-0 border-0 shadow-none align-middle"
+                                                onClick={() => setSlabsList(slabsList.filter((_, i) => i !== index))}
+                                              >
+                                                <FiX size={14} />
+                                              </button>
+                                            )}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                                <div className="text-end text-success fw-bold small p-1">
+                                  Total Area Modeled: {(() => {
+                                    let total = 0;
+                                    slabsList.forEach(s => {
+                                      const l = parseFloat(s.length) || 0;
+                                      const w = parseFloat(s.width) || 0;
+                                      const q = parseInt(s.quantity) || 0;
+                                      let lMm = l;
+                                      let wMm = w;
+                                      if (s.unit === 'cm') {
+                                        lMm *= 10;
+                                        wMm *= 10;
+                                      } else if (s.unit === 'ft') {
+                                        lMm *= 304.8;
+                                        wMm *= 304.8;
+                                      }
+                                      total += (lMm * wMm * q) / 92903.04;
+                                    });
+                                    return total.toFixed(2);
+                                  })()} Sq Ft
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="col-12 mt-2">
+                                <label className="form-label small fw-bold text-secondary d-block">Select Slabs to Deduct/adjust out</label>
+                                {(() => {
+                                  const activeStockEntry = stockLevels.find(s => s.id === parseInt(watchProductId));
+                                  const watchWarehouseId = watch('warehouse_id');
+                                  const availableSlabs = activeStockEntry?.slabs?.filter(slab => slab.warehouse_id === parseInt(watchWarehouseId)) || [];
+                                  
+                                  if (availableSlabs.length === 0) {
+                                    return <div className="text-secondary small py-2 bg-light rounded text-center border">No available slabs found for this product in the selected warehouse.</div>;
+                                  }
+                                  
+                                  return (
+                                    <div className="border rounded bg-white p-2" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                                      {availableSlabs.map(slab => (
+                                        <div key={slab.id} className="form-check d-flex align-items-center justify-content-between border-bottom py-1 px-2">
+                                          <div>
+                                            <input
+                                              className="form-check-input me-2"
+                                              type="checkbox"
+                                              id={`slab-${slab.id}`}
+                                              value={slab.id}
+                                              checked={selectedSlabIds.includes(slab.id)}
+                                              onChange={(e) => {
+                                                const idVal = parseInt(e.target.value);
+                                                if (e.target.checked) {
+                                                  setSelectedSlabIds([...selectedSlabIds, idVal]);
+                                                } else {
+                                                  setSelectedSlabIds(selectedSlabIds.filter(id => id !== idVal));
+                                                }
+                                              }}
+                                            />
+                                            <label className="form-check-label small" htmlFor={`slab-${slab.id}`}>
+                                              Lot: <strong>{slab.lot_number || 'N/A'}</strong> | Slab #{slab.slab_number || 'N/A'} | {slab.length}x{slab.width} mm ({parseFloat(slab.area_sqft).toFixed(2)} Sq Ft)
+                                            </label>
+                                          </div>
+                                          <span className="badge bg-light text-secondary border">{slab.rack_number || 'R'}/{slab.slot_number || 'S'}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
+                                {selectedSlabIds.length > 0 && (
+                                  <div className="text-end text-danger fw-bold small p-1 mt-2">
+                                    Total Selected Subtraction Area: {(() => {
+                                      const activeStockEntry = stockLevels.find(s => s.id === parseInt(watchProductId));
+                                      const slabs = activeStockEntry?.slabs || [];
+                                      const selectedSlabs = slabs.filter(s => selectedSlabIds.includes(s.id));
+                                      return selectedSlabs.reduce((sum, s) => sum + parseFloat(s.area_sqft), 0).toFixed(2);
+                                    })()} Sq Ft
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
 
                   <div className="mb-3">
@@ -686,13 +958,59 @@ export default function InventoryPage() {
                       <input type="text" className="form-control" placeholder="Slot" {...register('to_slot')} />
                     </div>
 
-                    <div className="col-12">
-                      <label className="form-label small fw-bold text-secondary">Quantity to Relocate</label>
-                      <div className="input-group">
-                        <input type="number" step="0.0001" className="form-control" {...register('quantity', { required: true, min: 0.0001 })} />
-                        <span className="input-group-text bg-light small fw-semibold">{selectedItemForRelocate.unit}</span>
+                    {selectedItemForRelocate.is_slab ? (
+                      <div className="col-12">
+                        <label className="form-label small fw-bold text-secondary d-block">Select Slabs to Relocate</label>
+                        {selectedItemForRelocate.slabs && selectedItemForRelocate.slabs.length > 0 ? (
+                          <div className="border rounded bg-white p-2" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                            {selectedItemForRelocate.slabs.map(slab => (
+                              <div key={slab.id} className="form-check d-flex align-items-center justify-content-between border-bottom py-1 px-2">
+                                <div>
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    id={`rel-slab-${slab.id}`}
+                                    value={slab.id}
+                                    checked={selectedSlabIds.includes(slab.id)}
+                                    onChange={(e) => {
+                                      const idVal = parseInt(e.target.value);
+                                      if (e.target.checked) {
+                                        setSelectedSlabIds([...selectedSlabIds, idVal]);
+                                      } else {
+                                        setSelectedSlabIds(selectedSlabIds.filter(id => id !== idVal));
+                                      }
+                                    }}
+                                  />
+                                  <label className="form-check-label small" htmlFor={`rel-slab-${slab.id}`}>
+                                    Lot: <strong>{slab.lot_number || 'N/A'}</strong> | Slab #{slab.slab_number || 'N/A'} | {slab.length}x{slab.width} mm ({parseFloat(slab.area_sqft).toFixed(2)} Sq Ft)
+                                  </label>
+                                </div>
+                                <span className="badge bg-light text-secondary border">{slab.rack_number || 'R'}/{slab.slot_number || 'S'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-secondary small py-2 bg-light rounded text-center border">No active slabs found for relocation.</div>
+                        )}
+                        {selectedSlabIds.length > 0 && (
+                          <div className="text-end text-primary fw-bold small p-1 mt-2">
+                            Total Relocated Area: {(() => {
+                              const slabs = selectedItemForRelocate.slabs || [];
+                              const selectedSlabs = slabs.filter(s => selectedSlabIds.includes(s.id));
+                              return selectedSlabs.reduce((sum, s) => sum + parseFloat(s.area_sqft), 0).toFixed(2);
+                            })()} Sq Ft
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    ) : (
+                      <div className="col-12">
+                        <label className="form-label small fw-bold text-secondary">Quantity to Relocate</label>
+                        <div className="input-group">
+                          <input type="number" step="0.0001" className="form-control" {...register('quantity', { required: !selectedItemForRelocate.is_slab, min: 0.0001 })} />
+                          <span className="input-group-text bg-light small fw-semibold">{selectedItemForRelocate.unit}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="d-grid mt-4">
